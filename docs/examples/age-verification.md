@@ -1,0 +1,66 @@
+---
+sidebar_position: 2
+---
+
+# Age Verification
+
+You can verify someone's age without learning their date of birth nor their actual age.
+
+## Verify if the user is over 18 years old
+
+You can verify if the user is over 18 years old. You will not learn their date of birth nor their actual age, only that they are 18+.
+
+```typescript
+import { ZKPassport } from "@zkpassport/sdk";
+
+const zkPassport = new ZKPassport();
+
+const queryBuilder = await zkPassport.request({
+  name: "ZKPassport",
+  logo: "https://zkpassport.id/logo.png",
+  purpose: "Prove you over 18 years old",
+  scope: "adult",
+});
+
+const { url, onResult } = queryBuilder.gte("age", 18).done();
+
+onResult(({ verified, result }) => {
+  if (verified) {
+    const isOver18 = result.age.gte.result;
+    console.log("User is over 18 years old", isOver18);
+  } else {
+    console.log("Verification failed");
+  }
+});
+```
+
+## Verify if the user is between 18 and 25 years old
+
+You can verify if the user is between 18 and 25 years old. You will not learn their date of birth nor their actual age, only that they are between 18 and 25 years old.
+
+```typescript
+import { ZKPassport } from "@zkpassport/sdk";
+
+const zkPassport = new ZKPassport();
+
+const queryBuilder = await zkPassport.request({
+  name: "ZKPassport",
+  logo: "https://zkpassport.id/logo.png",
+  purpose: "Prove you are between 18 and 25 years old",
+  scope: "young-adult",
+});
+
+// Note that the upper bound is exclusive
+const { url, onResult } = queryBuilder.gte("age", 18).lt("age", 26).done();
+// Alternatively, you can use the range operator
+const { url, onResult } = queryBuilder.range("age", 18, 26).done();
+
+onResult(({ verified, result }) => {
+  if (verified) {
+    const isBetween18And25 = result.age.gte.result && result.age.lt.result;
+    console.log("User is between 18 and 25 years old", isBetween18And25);
+  } else {
+    console.log("Verification failed");
+  }
+});
+```
