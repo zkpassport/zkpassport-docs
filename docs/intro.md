@@ -27,4 +27,4 @@ ZKPassport SDK enables privacy-preserving identity verification using passports 
 - Nationality verification
 - Identity attribute disclosure
 
-Check out our [Quick Start Guide](./getting-started/installation) to begin integrating ZKPassport into your application.
+Check out our [Quick Start Guide](./getting-started/quick-start) to begin integrating ZKPassport into your application.

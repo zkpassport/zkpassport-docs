@@ -44,7 +44,7 @@ const config = {
           sidebarPath: "./sidebars.ts",
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl: "https://github.com/zkpassport/zkpassport-sdk/tree/main/docs/",
+          editUrl: "https://github.com/zkpassport/zkpassport-docs/tree/main/",
         },
         blog: false,
         theme: {
@@ -90,17 +90,29 @@ const config = {
                 to: "/intro",
               },
               {
-                label: "Installation",
-                to: "/getting-started/installation",
+                label: "Quick Start",
+                to: "/getting-started/quick-start",
+              },
+              {
+                label: "Basic Usage",
+                to: "/getting-started/usage",
               },
             ],
           },
           {
-            title: "Community",
+            title: "Links",
             items: [
               {
                 label: "GitHub",
                 href: "https://github.com/zkpassport/zkpassport-sdk",
+              },
+              {
+                label: "Website",
+                href: "https://zkpassport.id",
+              },
+              {
+                label: "X",
+                href: "https://x.com/zkpassport",
               },
             ],
           },
