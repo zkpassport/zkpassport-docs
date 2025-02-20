@@ -59,14 +59,21 @@ const {
   onReject,
   onError,
 } = queryBuilder
+  // Disclose the user's firstname
   .disclose("firstname")
+  // Verify the user is greater than or equal to 18
   .gte("age", 18)
+  // Verify the user's nationality is in the European Union
+  // EU_COUNTRIES is a constant exported by the SDK containing all the EU countries
   .in("nationality", EU_COUNTRIES)
+  // Verify the user's nationality is not from a Scandinavian country
+  // Note: Norway is not an EU country
   .out("nationality", ["Sweden", "Denmark"])
+  // Finalize the query
   .done();
 ```
 
-The function `done()` at the end finalizes the query and return the URL to the ZKPassport app along with the callbacks you can use to handle the different stages of the verification process.
+The function `done()` at the end finalizes the query and returns the URL to the ZKPassport app along with the callbacks you can use to handle the different stages of the verification process.
 
 ## Using the URL
 
@@ -79,7 +86,7 @@ You can use a library such as [qrcode](https://www.npmjs.com/package/qrcode) to 
 ```typescript
 import qrcode from "qrcode";
 
-// This assuming you have a canvas tag with id canvas on your HTML page
+// This is assuming you have a canvas tag with id canvas on your HTML page
 // i.e. <canvas id="canvas"></canvas>
 qrcode.toCanvas(document.getElementById("canvas"), url);
 ```

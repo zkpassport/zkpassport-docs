@@ -6,6 +6,12 @@ sidebar_position: 2
 
 You can verify someone's age without learning their date of birth nor their actual age.
 
+:::info
+The lower bound for age comparison is inclusive, but the upper bound is exclusive. Hence, the available operators for age are `gte` (greater than or equal to) and `lt` (less than).
+
+You can also use the `range` operator to verify if the user's age is between two values. Similarly, the lower bound is inclusive and the upper bound is exclusive.
+:::
+
 ## Verify if the user is over 18 years old
 
 You can verify if the user is over 18 years old. You will not learn their date of birth nor their actual age, only that they are 18+.
@@ -50,9 +56,14 @@ const queryBuilder = await zkPassport.request({
   scope: "young-adult",
 });
 
+// gte is greater than or equal to
+// lt is less than
 // Note that the upper bound is exclusive
 const { url, onResult } = queryBuilder.gte("age", 18).lt("age", 26).done();
 // Alternatively, you can use the range operator
+// Again, the upper bound is exclusive
+// If the user's 26th birthday is tomorrow,
+// they will still be considered to be between 18 and 25
 const { url, onResult } = queryBuilder.range("age", 18, 26).done();
 
 onResult(({ verified, result }) => {
