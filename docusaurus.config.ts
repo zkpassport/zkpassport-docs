@@ -95,7 +95,7 @@ const config = {
               },
               {
                 label: "Basic Usage",
-                to: "/getting-started/usage",
+                to: "/getting-started/basic-usage",
               },
             ],
           },
