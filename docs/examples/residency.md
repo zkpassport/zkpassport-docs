@@ -22,8 +22,17 @@ const queryBuilder = await zkPassport.request({
   scope: "france-resident",
 });
 
-const { url } = queryBuilder
+const { url, onResult } = queryBuilder
   .eq("document_type", "residence_permit")
   .eq("issuing_country", "France")
   .done();
+
+onResult(({ verified, result }) => {
+  if (verified) {
+    const isResidentInFrance = result.document_type.eq.result && result.issuing_country.eq.result;
+    console.log("User is resident in France", isResidentInFrance);
+  } else {
+    console.log("Verification failed");
+  }
+});
 ```
