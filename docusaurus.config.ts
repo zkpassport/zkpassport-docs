@@ -62,7 +62,7 @@ const config = {
       navbar: {
         title: "ZKPassport",
         logo: {
-          alt: "ZKPassport Logo",
+          alt: "🌐",
           src: "img/logo.png",
         },
         items: [
@@ -117,7 +117,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Obsidion Labs Limited. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} ZKPassport. Built with Docusaurus.`,
       },
       prism: {
         theme: prismThemes.github,
