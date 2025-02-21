@@ -61,7 +61,7 @@ const {
 } = queryBuilder
   // Disclose the user's firstname
   .disclose("firstname")
-  // Verify the user is greater than or equal to 18
+  // Verify the user's age is greater than or equal to 18
   .gte("age", 18)
   // Verify the user's nationality is in the European Union
   // EU_COUNTRIES is a constant exported by the SDK containing all the EU countries

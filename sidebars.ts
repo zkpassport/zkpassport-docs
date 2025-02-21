@@ -35,6 +35,7 @@ const sidebars: SidebarsConfig = {
         "examples/kyc",
       ],
     },
+    "api",
   ],
 };
 
