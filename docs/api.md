@@ -116,7 +116,7 @@ Available fields:
 - `lastname`: The last name of the ID holder
 - `expiry_date`: The expiration date of the ID document
 - `document_number`: The unique number of the ID document (handle with care as it's sensitive information)
-- `document_type`: The type of document (e.g., "passport", "residence_permit", "national_id")
+- `document_type`: The type of document (e.g., "passport", "residence_permit", "id_card")
 - `issuing_country`: The country that issued the ID document
 - `gender`: The gender as it appears on the ID
 
