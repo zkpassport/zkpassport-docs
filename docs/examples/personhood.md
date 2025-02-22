@@ -18,7 +18,7 @@ To have a proof of unique ID, you can simply initiate a request with no informat
 ```typescript
 import { ZKPassport } from "@zkpassport/sdk";
 
-const zkPassport = new ZKPassport();
+const zkPassport = new ZKPassport("your-domain.com");
 
 const queryBuilder = await zkPassport.request({
   name: "ZKPassport",

@@ -53,7 +53,11 @@ async verify(
   requestId: string,
   proofs?: Array<ProofResult>,
   queryResult?: QueryResult
-): Promise<{ uniqueIdentifier: string | undefined; verified: boolean }>
+): Promise<{
+  uniqueIdentifier: string | undefined;
+  verified: boolean;
+  queryResultErrors?: QueryResultErrors;
+}>
 ```
 
 Verifies the proofs received from the mobile app.
@@ -68,6 +72,7 @@ Returns an object containing:
 
 - `uniqueIdentifier`: The unique identifier associated with the user
 - `verified`: Whether the proofs were successfully verified
+- `queryResultErrors`: Detailed error information if verification fails (undefined if verification succeeds)
 
 #### getUrl
 
@@ -92,6 +97,21 @@ Cancels a request by closing the WebSocket connection and cleaning up associated
 Parameters:
 
 - `requestId`: The request ID to cancel
+
+#### clearAllRequests
+
+```typescript
+clearAllRequests(): void
+```
+
+Cancels all active requests and cleans up associated resources. This method:
+
+- Closes all active WebSocket connections
+- Clears all stored request data
+- Removes all event handlers
+- Resets the SDK state
+
+Use this method when you want to clean up all pending requests, for example when your application is shutting down or when you want to reset the SDK state.
 
 ## QueryBuilder Interface
 
@@ -226,9 +246,14 @@ done(): {
   onRequestReceived: (callback: () => void) => void;
   onGeneratingProof: (callback: () => void) => void;
   onProofGenerated: (callback: (result: ProofResult) => void) => void;
-  onResult: (callback: (result: QueryResult) => void) => void;
+  onResult: (callback: (response: {
+    uniqueIdentifier: string | undefined;
+    verified: boolean;
+    result: QueryResult;
+    queryResultErrors?: QueryResultErrors;
+  }) => void) => void;
   onReject: (callback: () => void) => void;
-  onError: (callback: (error: Error) => void) => void;
+  onError: (callback: (error: string) => void) => void;
   onBridgeConnect: (callback: () => void) => void;
   isBridgeConnected: () => boolean;
   requestReceived: () => boolean;
@@ -277,14 +302,20 @@ Called when an individual proof has been generated. Multiple proofs may be gener
 ### onResult
 
 ```typescript
-onResult(callback: (result: QueryResult) => void): void
+onResult(callback: (response: {
+  uniqueIdentifier: string | undefined;
+  verified: boolean;
+  result: QueryResult;
+  queryResultErrors?: QueryResultErrors;
+}) => void): void
 ```
 
-Called when all proofs have been generated and verified. This is the main callback you'll use to handle the verification results. The callback receives a `QueryResult` object containing:
+Called when all proofs have been generated and verified. This is the main callback you'll use to handle the verification results. The callback receives a response object containing:
 
 - `uniqueIdentifier`: A unique identifier for the user's ID (undefined if verification failed)
 - `verified`: Whether all proofs were successfully verified
-- `result`: Object containing the results of each verification
+- `result`: The result of the verification
+- `queryResultErrors`: Detailed error information if verification fails (undefined if verification succeeds)
 
 :::warning
 If `verified` is `false`, you should not trust any of the results and `uniqueIdentifier` will be undefined.
@@ -301,7 +332,7 @@ Called when the user rejects the verification request.
 ### onError
 
 ```typescript
-onError(callback: (error: Error) => void): void
+onError(callback: (error: string) => void): void
 ```
 
 Called if an error occurs during the verification process.
@@ -436,7 +467,38 @@ type DisclosableIDCredential =
   | "document_type"
   | "issuing_country"
   | "gender";
+
+interface QueryResultErrors {
+  [
+    key: IDCredential | "sig_check_dsc" | "sig_check_id_data" | "data_check_integrity" | "disclose"
+  ]: {
+    disclose?: QueryResultError<string | number | Date>;
+    gte?: QueryResultError<number | Date>;
+    lte?: QueryResultError<number | Date>;
+    lt?: QueryResultError<number | Date>;
+    range?: QueryResultError<[number | Date, number | Date]>;
+    in?: QueryResultError<string[]>;
+    out?: QueryResultError<string[]>;
+    eq?: QueryResultError<string | number | Date>;
+    commitment?: QueryResultError<string>;
+    date?: QueryResultError<string>;
+    certificate?: QueryResultError<string>;
+  };
+}
+
+interface QueryResultError<T> {
+  expected?: T;
+  received?: T;
+  message: string;
+}
 ```
+
+The `QueryResultErrors` type provides detailed error information when verification fails. It includes:
+
+- Error details for each credential field
+- Specific error messages for different types of verification checks
+- Expected vs received values for debugging
+- Error messages for signature checks and data integrity
 
 ## Constants
 

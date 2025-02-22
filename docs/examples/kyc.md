@@ -17,7 +17,7 @@ Even if not fully compliant with KYC, you can use ZKPassport to verify some info
 ```typescript
 import { ZKPassport } from "@zkpassport/sdk";
 
-const zkPassport = new ZKPassport();
+const zkPassport = new ZKPassport("your-domain.com");
 
 const queryBuilder = await zkPassport.request({
   name: "ZKPassport",

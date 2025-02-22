@@ -19,7 +19,7 @@ You can verify if the user is over 18 years old. You will not learn their date o
 ```typescript
 import { ZKPassport } from "@zkpassport/sdk";
 
-const zkPassport = new ZKPassport();
+const zkPassport = new ZKPassport("your-domain.com");
 
 const queryBuilder = await zkPassport.request({
   name: "ZKPassport",
@@ -47,7 +47,7 @@ You can verify if the user is between 18 and 25 years old. You will not learn th
 ```typescript
 import { ZKPassport } from "@zkpassport/sdk";
 
-const zkPassport = new ZKPassport();
+const zkPassport = new ZKPassport("your-domain.com");
 
 const queryBuilder = await zkPassport.request({
   name: "ZKPassport",

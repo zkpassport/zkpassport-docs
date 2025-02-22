@@ -15,7 +15,7 @@ The SDK provides some common groups of countries like the European Union, Scheng
 ```typescript
 import { ZKPassport, EU_COUNTRIES } from "@zkpassport/sdk";
 
-const zkPassport = new ZKPassport();
+const zkPassport = new ZKPassport("your-domain.com");
 
 const queryBuilder = await zkPassport.request({
   name: "ZKPassport",
@@ -43,7 +43,7 @@ You can check if the user is not from a list of countries. A common use case is 
 ```typescript
 import { ZKPassport, SANCTIONNED_COUNTRIES } from "@zkpassport/sdk";
 
-const zkPassport = new ZKPassport();
+const zkPassport = new ZKPassport("your-domain.com");
 
 const queryBuilder = await zkPassport.request({
   name: "ZKPassport",
@@ -71,7 +71,7 @@ You can disclose the nationality of the user. This is useful if you want to veri
 ```typescript
 import { ZKPassport } from "@zkpassport/sdk";
 
-const zkPassport = new ZKPassport();
+const zkPassport = new ZKPassport("your-domain.com");
 
 const queryBuilder = await zkPassport.request({
   name: "ZKPassport",
@@ -101,7 +101,7 @@ The expected input is an array of country names or alpha 3 codes. Don't worry, t
 ```typescript
 import { ZKPassport } from "@zkpassport/sdk";
 
-const zkPassport = new ZKPassport();
+const zkPassport = new ZKPassport("your-domain.com");
 
 const queryBuilder = await zkPassport.request({
   name: "ZKPassport",

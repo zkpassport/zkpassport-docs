@@ -13,7 +13,7 @@ You can check if the user is resident of a specific country. France is used as a
 ```typescript
 import { ZKPassport } from "@zkpassport/sdk";
 
-const zkPassport = new ZKPassport();
+const zkPassport = new ZKPassport("your-domain.com");
 
 const queryBuilder = await zkPassport.request({
   name: "ZKPassport",
