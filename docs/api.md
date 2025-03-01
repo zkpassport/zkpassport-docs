@@ -131,8 +131,8 @@ Available fields:
 
 - `nationality`: The nationality of the ID holder
 - `birthdate`: The date of birth of the ID holder
-- `fullname`: The full name as it appears on the ID
-- `firstname`: The first name of the ID holder
+- `fullname`: The full name as it appears on the ID (including middle names and secondary given names)
+- `firstname`: The first name of the ID holder (doesn't include secondary given names nor middle names)
 - `lastname`: The last name of the ID holder
 - `expiry_date`: The expiration date of the ID document
 - `document_number`: The unique number of the ID document (handle with care as it's sensitive information)
@@ -200,7 +200,7 @@ Currently supported for:
 #### in
 
 ```typescript
-in<T extends "nationality">(key: T, value: IDCredentialValue<T>[]): QueryBuilder
+in<T extends "nationality" | "issuing_country">(key: T, value: IDCredentialValue<T>[]): QueryBuilder
 ```
 
 Verifies if a field's value is in a set of values.
@@ -208,11 +208,12 @@ Verifies if a field's value is in a set of values.
 Currently only supported for:
 
 - `nationality`: Check if the user is a citizen of one of several countries
+- `issuing_country`: Check if the user's ID was issued by one of several countries
 
 #### out
 
 ```typescript
-out<T extends "nationality">(key: T, value: IDCredentialValue<T>[]): QueryBuilder
+out<T extends "nationality" | "issuing_country">(key: T, value: IDCredentialValue<T>[]): QueryBuilder
 ```
 
 Verifies if a field's value is not in a set of values.
@@ -220,6 +221,7 @@ Verifies if a field's value is not in a set of values.
 Currently only supported for:
 
 - `nationality`: Check if the user is not a citizen of certain countries
+- `issuing_country`: Check if the user's ID was not issued by certain countries
 
 #### eq
 

@@ -29,6 +29,8 @@ const queryBuilder = await zkPassport.request({
 const { url, onResult } = queryBuilder
   .disclose("nationality")
   .disclose("birthdate")
+  // Fullname includes middle names and secondary given names
+  // while disclosing firstname and lastname will not include them
   .disclose("fullname")
   // The expiry date is checked during the proof generation
   // but in this context you may need to know when the ID will expire

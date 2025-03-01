@@ -60,7 +60,7 @@ const config = {
       // Replace with your project's social card
       image: "img/docusaurus-social-card.jpg",
       colorMode: {
-        defaultMode: 'light',
+        defaultMode: "light",
         respectPrefersColorScheme: true,
         disableSwitch: false,
       },
@@ -101,6 +101,10 @@ const config = {
               {
                 label: "Basic Usage",
                 to: "/getting-started/basic-usage",
+              },
+              {
+                label: "FAQ",
+                to: "/faq",
               },
             ],
           },

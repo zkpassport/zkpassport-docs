@@ -36,3 +36,34 @@ onResult(({ verified, result }) => {
   }
 });
 ```
+
+## Check EU residency
+
+You can check if the user is resident of a group of countries. EU is used as an example here, as there are multiple countries in the EU issuing electronic residence permits.
+
+```typescript
+import { ZKPassport, EU_COUNTRIES } from "@zkpassport/sdk";
+
+const zkPassport = new ZKPassport("your-domain.com");
+
+const queryBuilder = await zkPassport.request({
+  name: "ZKPassport",
+  logo: "https://zkpassport.id/logo.png",
+  purpose: "Prove you are resident in France",
+  scope: "france-resident",
+});
+
+const { url, onResult } = queryBuilder
+  .eq("document_type", "residence_permit")
+  .in("issuing_country", EU_COUNTRIES)
+  .done();
+
+onResult(({ verified, result }) => {
+  if (verified) {
+    const isEUResident = result.document_type.eq.result && result.issuing_country.in.result;
+    console.log("User is resident in EU", isEUResident);
+  } else {
+    console.log("Verification failed");
+  }
+});
+```

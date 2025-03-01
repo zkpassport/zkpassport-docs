@@ -36,6 +36,11 @@ const sidebars: SidebarsConfig = {
       ],
     },
     "api",
+    {
+      type: "doc",
+      label: "FAQ",
+      id: "faq",
+    },
   ],
 };
 
