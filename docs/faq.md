@@ -36,7 +36,7 @@ You can integrate ZKPassport using our SDK. Check out the [Quick Start Guide](/g
 
 ### Are there any example implementations available?
 
-Yes, we provide several examples demonstrating different use cases. See our [Examples](/examples/index) section for implementations of age verification, nationality verification, residency verification, and more. If you want to try it out, you can use our [demo page](https://demo.zkpassport.id).
+Yes, we provide several examples demonstrating different use cases. See our [Examples](/examples) section for implementations of age verification, nationality verification, residency verification, and more. If you want to try it out, you can use our [demo page](https://demo.zkpassport.id).
 
 ### How can I integrate ZKPassport with my smart contracts?
 
