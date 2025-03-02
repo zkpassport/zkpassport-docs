@@ -42,6 +42,12 @@ Yes, we provide several examples demonstrating different use cases. See our [Exa
 
 At this time, ZKPassport SDK only provides a way to verify proofs in a web application (either browser or server-side). However, we are currently working on the infrastructure necessary to verify proofs on-chain. Stay tuned!
 
+**Note:** while you cannot verify the proofs on an EVM chain as we'll need to deploy the Solidity verifiers first, you can already verify proofs on Aztec (in the sandbox or upcoming devnet and testnet). Using the latest version of Aztec and Noir, you can use the [`verify_proof`](https://noir-lang.org/docs/noir/standard_library/recursion#verifying-recursive-proofs) function from the standard library. You would need to use the helper functions from our [internal utils library](https://github.com/zkpassport/zkpassport-utils) to get the necessary information about the proof and its verification key. We'll provide more information on how to do it soon.
+
+### Can I use the proofs in my Noir circuits?
+
+Yes, you can use the proofs in your Noir circuits if you are using Barretenberg as the proving backend by using the [`verify_proof`](https://noir-lang.org/docs/noir/standard_library/recursion#verifying-recursive-proofs) function from the standard library. You would need to use the helper functions from our [internal utils library](https://github.com/zkpassport/zkpassport-utils) to get the necessary information about the proof and its verification key. We'll provide more information on how to do it soon.
+
 ## Troubleshooting
 
 ### My passport/ID card is not being recognized. What should I do?
