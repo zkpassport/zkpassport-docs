@@ -13,7 +13,7 @@ Implementing this pattern using serverless functions (e.g. Next.js API Routes) m
 ## Client-Side Implementation
 
 ```tsx
-import { ZKPassport } from "zkpassport";
+import { ZKPassport } from "@zkpassport/sdk";
 import { useState } from "react";
 import QRCode from "react-qr-code"; // For QR code generation
 
@@ -220,7 +220,7 @@ export default RegistrationForm;
 ```javascript
 // server.js (Node.js with Express)
 const express = require("express");
-const { ZKPassport } = require("zkpassport");
+const { ZKPassport } = require("@zkpassport/sdk");
 const bodyParser = require("body-parser");
 const { createUser } = require("./db"); // Your database logic
 
