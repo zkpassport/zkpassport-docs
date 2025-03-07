@@ -49,22 +49,23 @@ Returns a `QueryBuilder` instance for building the verification query.
 #### verify
 
 ```typescript
-async verify(
-  requestId: string,
-  proofs?: Array<ProofResult>,
-  queryResult?: QueryResult
-): Promise<{
+async verify({
+  proofs,
+  queryResult,
+}: {
+  proofs: Array<ProofResult>;
+  queryResult: QueryResult;
+}): Promise<{
   uniqueIdentifier: string | undefined;
   verified: boolean;
   queryResultErrors?: QueryResultErrors;
 }>
 ```
 
-Verifies the proofs received from the mobile app.
+Verifies the proofs received from the mobile app. You can store the proofs and query result and use this method to verify them later, for example server-side after running the SDK logic client-side.
 
 Parameters:
 
-- `requestId`: The request ID
 - `proofs`: The proofs to verify
 - `queryResult`: The query result to verify against
 

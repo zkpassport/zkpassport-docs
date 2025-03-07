@@ -33,6 +33,11 @@ const sidebars: SidebarsConfig = {
         "examples/residency",
         "examples/personhood",
         "examples/kyc",
+        {
+          type: "doc",
+          label: "Client-Server",
+          id: "examples/client-server",
+        },
       ],
     },
     "api",
