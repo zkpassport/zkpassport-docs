@@ -24,7 +24,7 @@ function RegistrationForm() {
   const [error, setError] = useState("");
   const [verificationUrl, setVerificationUrl] = useState("");
   const [requestId, setRequestId] = useState("");
-  let zkPassport: ZKPassport | null = null;
+  const zkpassportRef = useRef<ZKPassport | null>(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,12 +32,12 @@ function RegistrationForm() {
 
     try {
       // Initialize the ZKPassport SDK
-      if (!zkPassport) {
-        zkPassport = new ZKPassport();
+      if (!zkpassportRef.current) {
+        zkpassportRef.current = new ZKPassport();
       }
 
       // Create a verification request
-      const query = await zkPassport.request({
+      const query = await zkpassportRef.current.request({
         name: "YourApp",
         logo: "https://yourapp.com/logo.png",
         purpose: "Account verification for registration",
@@ -138,8 +138,8 @@ function RegistrationForm() {
 
   // Function to cancel a verification request
   const cancelVerification = () => {
-    if (requestId) {
-      zkPassport.cancelRequest(requestId);
+    if (requestId && zkpassportRef.current) {
+      zkpassportRef.current.cancelRequest(requestId);
       setVerificationStatus("idle");
       setVerificationUrl("");
       setRequestId("");
