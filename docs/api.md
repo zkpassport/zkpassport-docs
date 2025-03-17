@@ -299,8 +299,8 @@ Called when an individual proof has been generated. Multiple proofs may be gener
 
 - `proof`: The generated proof
 - `vkeyHash`: Hash of the verification key
-- `version`: Version of the proof system
-- `name`: Name of the proof
+- `version`: Version of the circuit used to generate the proof
+- `name`: Name of the circuit used to generate the proof
 
 ### onResult
 
