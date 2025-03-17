@@ -34,6 +34,15 @@ const config = {
     locales: ["en"],
   },
 
+  // Add the Plausible Analytics script
+  scripts: [
+    {
+      src: "https://plausible.io/js/script.js",
+      defer: true,
+      "data-domain": "docs.zkpassport.id",
+    },
+  ],
+
   presets: [
     [
       "classic",
