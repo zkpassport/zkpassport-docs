@@ -4,6 +4,10 @@ sidebar_position: 1
 
 # Quick Start
 
+:::warning
+This is experimental software that has not been audited yet. Use at your own risk.
+:::
+
 ZKPassport SDK is available as a package on [npm](https://www.npmjs.com/package/@zkpassport/sdk) and accessible publicly on [GitHub](https://github.com/zkpassport/zkpassport-sdk). It is meant to work both in the browser and in Node.js.
 
 ## Installation

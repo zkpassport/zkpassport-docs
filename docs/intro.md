@@ -6,10 +6,6 @@ sidebar_position: 1
 
 Privacy-preserving identity verification using passports and ID cards.
 
-:::warning
-This is experimental software that has not been audited yet. Use at your own risk.
-:::
-
 ## Overview
 
 ZKPassport SDK enables privacy-preserving identity verification using passports and ID cards. It allows developers to request and verify specific identity attributes without exposing unnecessary personal information.
