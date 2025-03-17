@@ -24,7 +24,7 @@ const zkPassport = new ZKPassport("your-domain.com");
 const queryBuilder = await zkPassport.request({
   name: "ZKPassport",
   logo: "https://zkpassport.id/logo.png",
-  purpose: "Prove you over 18 years old",
+  purpose: "Prove you are 18+ years old",
   scope: "adult",
 });
 
@@ -33,7 +33,7 @@ const { url, onResult } = queryBuilder.gte("age", 18).done();
 onResult(({ verified, result }) => {
   if (verified) {
     const isOver18 = result.age.gte.result;
-    console.log("User is over 18 years old", isOver18);
+    console.log("User is 18+ years old", isOver18);
   } else {
     console.log("Verification failed");
   }
