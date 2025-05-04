@@ -40,9 +40,7 @@ Yes, we provide several examples demonstrating different use cases. See our [Exa
 
 ### How can I integrate ZKPassport with my smart contracts?
 
-At this time, ZKPassport SDK only provides a way to verify proofs in a web application (either browser or server-side). However, we are currently working on the infrastructure necessary to verify proofs on-chain. Stay tuned!
-
-**Note:** while you cannot verify the proofs on an EVM chain as we'll need to deploy the Solidity verifiers first, you can already verify proofs on Aztec (in the sandbox or upcoming devnet and testnet). Using the latest version of Aztec and Noir, you can use the [`verify_proof`](https://noir-lang.org/docs/noir/standard_library/recursion#verifying-recursive-proofs) function from the standard library. You would need to use the helper functions from our [internal utils library](https://github.com/zkpassport/zkpassport-utils) to get the necessary information about the proof and its verification key. We'll provide more information on how to do it soon.
+For now, we only provide a way to verify proofs on Ethereum Sepolia. You can view our [Sample Contract Integration](https://github.com/zkpassport/circuits/blob/main/src/solidity/src/SampleContract.sol) and look at the [API reference](/api) to see how to do it. We'll add more complete examples to the docs soon.
 
 ### Can I use the proofs in my Noir circuits?
 

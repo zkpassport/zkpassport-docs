@@ -52,9 +52,14 @@ Returns a `QueryBuilder` instance for building the verification query.
 async verify({
   proofs,
   queryResult,
+  scope,
+  devMode,
 }: {
   proofs: Array<ProofResult>;
   queryResult: QueryResult;
+  scope?: string;
+  devMode?: boolean;
+  validity?: number;
 }): Promise<{
   uniqueIdentifier: string | undefined;
   verified: boolean;
@@ -68,12 +73,82 @@ Parameters:
 
 - `proofs`: The proofs to verify
 - `queryResult`: The query result to verify against
+- `scope` (optional): The scope used when requesting the proof
+- `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode will accept mock proofs generated from the mock passports in the app.
+- `validity` (optional): Number of days ago the ID should have been last scanned (defaults to 180 days)
 
 Returns an object containing:
 
 - `uniqueIdentifier`: The unique identifier associated with the user
 - `verified`: Whether the proofs were successfully verified
 - `queryResultErrors`: Detailed error information if verification fails (undefined if verification succeeds)
+
+#### getSolidityVerifierDetails
+
+```typescript
+getSolidityVerifierDetails(network: EVMChain): {
+  address: `0x${string}`
+  functionName: string
+  abi: {
+    type: "function" | "event" | "constructor"
+    name: string
+    inputs: { name: string; type: string; internalType: string }[]
+    outputs: { name: string; type: string; internalType: string }[]
+  }[]
+}
+```
+
+Returns the details of the Solidity verifier for the given network.
+
+Parameters:
+
+- `network`: The network to get the verifier details for (just `ethereum_sepolia` for now)
+
+Returns an object containing:
+
+- `address`: The address of the verifier
+- `functionName`: The name of the function to call on the verifier
+- `abi`: The ABI of the verifier
+
+#### getSolidityVerifierParameters
+
+```typescript
+getSolidityVerifierParameters({
+  proof,
+  validityPeriodInDays,
+  domain,
+  scope,
+  devMode,
+}: {
+  proof: ProofResult
+  validityPeriodInDays?: number
+  domain?: string
+  scope?: string
+  devMode?: boolean
+}): SolidityVerifierParameters
+```
+
+Returns the parameters needed to call the Solidity verifier.
+
+Parameters:
+
+- `proof`: The proof to verify
+- `validityPeriodInDays`: The validity period of the proof in days
+- `domain`: The domain of the request
+- `scope`: The scope of the request
+- `devMode`: Whether to use dev mode (use it if you're verifying mock proofs)
+
+Returns an object containing:
+
+- `vkeyHash`: The hash of the verification key
+- `proof`: The proof to verify
+- `publicInputs`: The public inputs to the proof
+- `committedInputs`: The committed inputs to the proof
+- `committedInputCounts`: The counts of committed inputs to the proof
+- `validityPeriodInDays`: The validity period of the proof in days
+- `scope`: The scope of the request
+- `subscope`: The subscope of the request
+- `devMode`: Whether to use dev mode
 
 #### getUrl
 
@@ -345,12 +420,24 @@ Called if an error occurs during the verification process.
 ### RequestOptions
 
 ```typescript
+// The type of proof to request
+// fast: Fast proof generation, slightly less privacy in regards to the issuing country
+// and not verifiable on-chain
+// compressed: Compressed proof generation, full privacy in regards to the issuing country
+// but not verifiable on EVM chains
+// compressed-evm: Compressed proof generation, full privacy in regards to the issuing country
+// and verifiable on EVM chains
+type ProofMode = "fast" | "compressed" | "compressed-evm";
+
 interface RequestOptions {
   name: string; // Your application name
   logo: string; // URL to your application's logo
   purpose: string; // Description of why you're requesting verification
+  mode?: ProofMode; // Specify the type of proof to request
   scope?: string; // Optional scope for the unique identifier
-  validity?: number; // Optional number of days ago the ID should have been last scanned (defaults to 180)
+  validity?: number; // Optional number of days ago the ID should have been last scanned
+  // (defaults to 180)
+  devMode?: boolean; // Optional flag to enable dev mode (defaults to false)
   topicOverride?: string; // Optional override for the request ID
   keyPairOverride?: {
     // Optional override for the ECDH key pair
@@ -446,6 +533,22 @@ type IDCredentialValue<T> = T extends "nationality" | "issuing_country"
   : T extends "age"
   ? number
   : string;
+```
+
+### SolidityVerifierParameters
+
+```typescript
+interface SolidityVerifierParameters = {
+  vkeyHash: string
+  proof: string
+  publicInputs: string[]
+  committedInputs: string
+  committedInputCounts: number[]
+  validityPeriodInDays: number
+  scope: string
+  subscope: string
+  devMode: boolean
+}
 ```
 
 ### Additional Types
