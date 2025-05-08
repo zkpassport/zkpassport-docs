@@ -22,6 +22,7 @@ const sidebars: SidebarsConfig = {
         "getting-started/quick-start",
         "getting-started/basic-usage",
         "getting-started/dev-mode",
+        "getting-started/onchain",
       ],
     },
     {
