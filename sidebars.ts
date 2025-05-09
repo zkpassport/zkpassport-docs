@@ -51,6 +51,11 @@ const sidebars: SidebarsConfig = {
       label: "FAQ",
       id: "faq",
     },
+    {
+      type: "doc",
+      label: "Changelog",
+      id: "changelog",
+    },
   ],
 };
 
