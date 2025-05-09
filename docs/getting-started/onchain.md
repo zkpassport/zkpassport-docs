@@ -247,6 +247,10 @@ contract YourContract {
         );
 
         // Store the unique identifier
+        // Warning: the resulting transaction could be caught by someone else
+        // in the mempool, essentially allowing someone else than intended to register
+        // with the proof. We will soon provide a way to commit to custom data, so you can
+        // bind the proof to the intended sender to prevent this.
         userIdentifiers[msg.sender] = uniqueIdentifier;
 
         return uniqueIdentifier;
