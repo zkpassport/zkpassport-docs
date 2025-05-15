@@ -8,21 +8,36 @@ sidebar_position: 6
 
 This page documents all notable changes to ZKPassport SDK, particularly highlighting any breaking changes that developers should be aware of when upgrading.
 
-## Upcoming release (v0.4.0) - Planned for 2025-05-16
+## Upcoming release
+
+### Breaking Changes
+
+- None
+
+### New Features
+
+- New `bind` method in the query builder to bind custom data to the proof (such as the user's ethereum address)
+
+### Bug Fixes
+
+- None
+
+## v0.4.0 - Latest release
 
 ### Breaking Changes
 
 - The new websocket logic introduces some breaking changes that makes it incompatible with previous versions of the mobile app. To use this release of the SDK, you will need to have the version 0.6.13 or higher of the mobile app.
+- The `verify` and `request` function need the `evmChain` parameter to be specified for proofs meant to be verified onchain, as the scope now depends of the chain id
 
 ### New Features
 
-- None currently
+- Scope unique identifier to chain id in addition to the domain name for onchain verification
 
 ### Bug Fixes
 
 - Stabilise websocket to prevent connection issues and message loss
 
-## v0.3.4 - Latest release
+## v0.3.4
 
 ### Breaking Changes
 

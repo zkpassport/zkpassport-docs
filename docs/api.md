@@ -30,6 +30,7 @@ async request(options: {
   logo: string;
   purpose: string;
   scope?: string;
+  evmChain?: EVMChain;
   validity?: number;
 }): Promise<QueryBuilder>
 ```
@@ -42,6 +43,7 @@ Parameters:
 - `logo`: URL to your application's logo
 - `purpose`: Description of why you're requesting verification
 - `scope` (optional): Scope for the unique identifier
+- `evmChain` (optional): Specify the EVM chain for proofs meant to be verified onchain (just `ethereum_sepolia` for now)
 - `validity` (optional): Number of days ago the ID should have been last scanned (defaults to 180 days)
 
 Returns a `QueryBuilder` instance for building the verification query.
@@ -53,11 +55,14 @@ async verify({
   proofs,
   queryResult,
   scope,
+  evmChain,
   devMode,
+  validity,
 }: {
   proofs: Array<ProofResult>;
   queryResult: QueryResult;
   scope?: string;
+  evmChain?: EVMChain;
   devMode?: boolean;
   validity?: number;
 }): Promise<{
@@ -74,6 +79,7 @@ Parameters:
 - `proofs`: The proofs to verify
 - `queryResult`: The query result to verify against
 - `scope` (optional): The scope used when requesting the proof
+- `evmChain` (optional): Specify the EVM chain for proofs meant to be verified onchain (just `ethereum_sepolia` for now)
 - `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode will accept mock proofs generated from the mock passports in the app.
 - `validity` (optional): Number of days ago the ID should have been last scanned (defaults to 180 days)
 
