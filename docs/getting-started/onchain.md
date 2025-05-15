@@ -40,6 +40,8 @@ const queryBuilder = await zkPassport.request({
   scope: "my-scope",
   // To verify proofs on EVM chains, you need to set the mode to "compressed-evm"
   mode: "compressed-evm",
+  // Specify the EVM chain where the proof will be verified, for now only `ethereum_sepolia` is supported
+  evmChain: "ethereum_sepolia",
 });
 
 // Build your query with the required attributes or conditions you want to verify
