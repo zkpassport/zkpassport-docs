@@ -201,6 +201,13 @@ interface IZKPassportVerifier {
     uint256[] calldata committedInputCounts,
     ProofType proofType
   ) external pure returns (uint256 currentDate, uint256 minDate, uint256 maxDate);
+  // Get the inputs for the bind proof
+  function getBindProofInputs(
+    bytes calldata committedInputs,
+    uint256[] calldata committedInputCounts
+  ) external pure returns (bytes memory data);
+  // Get the bound data from the raw data returned by the getBindProofInputs function
+  function getBoundData(bytes calldata data) external view returns (address userAddress, string memory customData);
   // Verify the scope of the proof
   function verifyScopes(bytes32[] calldata publicInputs, string calldata domain, string calldata scope) external view returns (bool);
 }
