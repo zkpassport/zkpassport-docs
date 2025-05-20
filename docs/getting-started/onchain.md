@@ -61,6 +61,10 @@ const {
   .disclose("document_type")
   // Verify the user's age is greater than or equal to 18
   .gte("age", 18)
+  // Bind the user's address to the proof
+  .bind("user_address", "0x1234567890123456789012345678901234567890")
+  // Bind custom data to the proof
+  .bind("custom_data", "my-custom-data")
   // Finalize the query
   .done();
 ```
@@ -248,11 +252,22 @@ contract YourContract {
           isIDCard
         );
 
+
+        // Get the raw data bound to the proof
+        // This is the data you bound to the proof using the bind method in the query builder
+        bytes memory data = zkPassportVerifier.getBindProofInputs(
+          params.committedInputs,
+          params.committedInputCounts
+        );
+        // Use the getBoundData function to get the formatted data
+        // which includes the user's address and any custom data
+        (bytes memory userAddress, bytes memory customData) = zkPassportVerifier.getBoundData(data);
+        // Make sure the user's address is the one that is calling the contract
+        require(userAddress == msg.sender, "Not the expected sender");
+        // You could also check the custom data if you bound any to the proof
+        // require(customData == "my-custom-data", "Invalid custom data");
+
         // Store the unique identifier
-        // Warning: the resulting transaction could be caught by someone else
-        // in the mempool, essentially allowing someone else than intended to register
-        // with the proof. We will soon provide a way to commit to custom data, so you can
-        // bind the proof to the intended sender to prevent this.
         userIdentifiers[msg.sender] = uniqueIdentifier;
 
         return uniqueIdentifier;

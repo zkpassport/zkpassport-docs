@@ -321,6 +321,21 @@ Can be used with any ID credential field:
 - `gender`: Check for a specific gender
 - And any other field that can be disclosed
 
+#### bind
+
+```typescript
+bind(key: "user_address" | "custom_data", value: string): QueryBuilder
+```
+
+Binds data to the proof.
+
+Note: The total size of the data cannot exceed 500 bytes.
+
+Currently supported:
+
+- `user_address`: The user's address such as an Ethereum address. This is treated as raw bytes.
+- `custom_data`: Custom data to be attached to the proof. This is treated as ASCII encoded text.
+
 #### done
 
 ```typescript
@@ -501,6 +516,10 @@ interface QueryResult {
       expected: string | number | Date; // Expected value for equality query
     };
   };
+  bind?: {
+    user_address?: string;
+    custom_data?: string;
+  };
 }
 ```
 
@@ -582,7 +601,13 @@ type DisclosableIDCredential =
 
 interface QueryResultErrors {
   [
-    key: IDCredential | "sig_check_dsc" | "sig_check_id_data" | "data_check_integrity" | "disclose"
+    key:
+      | IDCredential
+      | "sig_check_dsc"
+      | "sig_check_id_data"
+      | "data_check_integrity"
+      | "disclose"
+      | "bind"
   ]: {
     disclose?: QueryResultError<string | number | Date>;
     gte?: QueryResultError<number | Date>;

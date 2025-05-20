@@ -16,13 +16,27 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 ### New Features
 
-- New `bind` method in the query builder to bind custom data to the proof (such as the user's ethereum address)
+- Give the ability to change the url of the cloud prover used for compressed proofs
 
 ### Bug Fixes
 
 - None
 
-## v0.4.0 - Latest release
+## v0.4.1 - Latest release
+
+### Breaking Changes
+
+- With previous versions of the app (0.6.13 and lower), using the `bind` method may crash the app.
+
+### New Features
+
+- New `bind` method in the query builder to bind custom data to the proof (such as the user's ethereum address). User will need the version 0.6.14 or higher of the mobile app to use this feature.
+
+### Bug Fixes
+
+- None
+
+## v0.4.0
 
 ### Breaking Changes
 
