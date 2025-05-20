@@ -261,7 +261,7 @@ contract YourContract {
         );
         // Use the getBoundData function to get the formatted data
         // which includes the user's address and any custom data
-        (bytes memory userAddress, bytes memory customData) = zkPassportVerifier.getBoundData(data);
+        (address userAddress, string memory customData) = zkPassportVerifier.getBoundData(data);
         // Make sure the user's address is the one that is calling the contract
         require(userAddress == msg.sender, "Not the expected sender");
         // You could also check the custom data if you bound any to the proof
