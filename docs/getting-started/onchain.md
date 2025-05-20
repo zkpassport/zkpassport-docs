@@ -265,7 +265,9 @@ contract YourContract {
         // Make sure the user's address is the one that is calling the contract
         require(userAddress == msg.sender, "Not the expected sender");
         // You could also check the custom data if you bound any to the proof
-        // require(customData == "my-custom-data", "Invalid custom data");
+        require(customData == "my-custom-data", "Invalid custom data");
+        // If you didn't specify any custom data, make sure the string is empty
+        // require(bytes(customData).length == 0, "Custom data should be empty");
 
         // Store the unique identifier
         userIdentifiers[msg.sender] = uniqueIdentifier;
