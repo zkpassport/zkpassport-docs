@@ -32,6 +32,9 @@ async request(options: {
   scope?: string;
   evmChain?: EVMChain;
   validity?: number;
+  devMode?: boolean;
+  cloudProverUrl?: string;
+  bridgeUrl?: string;
 }): Promise<QueryBuilder>
 ```
 
@@ -45,6 +48,9 @@ Parameters:
 - `scope` (optional): Scope for the unique identifier
 - `evmChain` (optional): Specify the EVM chain for proofs meant to be verified onchain (just `ethereum_sepolia` for now)
 - `validity` (optional): Number of days ago the ID should have been last scanned (defaults to 180 days)
+- `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode will accept mock proofs generated from the mock passports in the app.
+- `cloudProverUrl` (optional): The url of the cloud prover to use for compressed proofs. Defaults to ZKPassport's Cloud Prover.
+- `bridgeUrl` (optional): The url of the websocket to use to connect to the mobile app. Defaults to ZKPassport's Bridge.
 
 Returns a `QueryBuilder` instance for building the verification query.
 

@@ -16,13 +16,29 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 ### New Features
 
-- Give the ability to change the url of the cloud prover used for compressed proofs
+- None
 
 ### Bug Fixes
 
 - None
 
-## v0.4.1 - Latest release
+## v0.4.2 - Latest release
+
+### Breaking Changes
+
+- None
+
+### New Features
+
+- You can now specify a custom url for the cloud prover used to generate compressed proofs
+- You can now specify a custom url for the websocket used to connect to the mobile app
+- The SDK now sends the version of the SDK to the mobile app so the app can check if it's compatible with the current version of the SDK
+
+### Bug Fixes
+
+- None
+
+## v0.4.1
 
 ### Breaking Changes
 
