@@ -22,7 +22,21 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 - None
 
-## v0.4.2 - Latest release
+## v0.4.3 - Latest release
+
+### Breaking Changes
+
+- None
+
+### New Features
+
+- None
+
+### Bug Fixes
+
+- Some certificate registry root were formatted incorrectly when querying the registry, this has been fixed
+
+## v0.4.2
 
 ### Breaking Changes
 
