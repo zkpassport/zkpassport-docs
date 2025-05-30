@@ -22,7 +22,22 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 - None
 
-## v0.4.3 - Latest release
+## v0.5.0 - Latest release
+
+### Breaking Changes
+
+- Proofs generated with the version 0.7.2 and below of the mobile app may not work correctly with the new version of the SDK. You will need to update the mobile app to version 0.7.4 or higher to make it work with this version of the SDK.
+
+### New Features
+
+- The SDK now supports the circuit registry keeping track of the valid logic that can be used to generate proofs (aka circuits)
+- When requesting an age verification, the SDK will warn explicitly when the value used is not in a valid range (i.e. not between 1 and 99)
+
+### Bug Fixes
+
+- None
+
+## v0.4.3
 
 ### Breaking Changes
 
