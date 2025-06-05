@@ -22,7 +22,21 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 - None
 
-## v0.5.0 - Latest release
+## v0.5.1 - Latest release
+
+### Breaking Changes
+
+- None
+
+### New Features
+
+- None
+
+### Bug Fixes
+
+- Fix an issue where sometimes the proof would not be received due to an incorrect processing of chunked websocket messages
+
+## v0.5.0
 
 ### Breaking Changes
 
