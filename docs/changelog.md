@@ -12,7 +12,7 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 ### Breaking Changes
 
-- None
+- The Solidity verifier now take slightly different parameters as `scope` was renamed to `domain` and `subscope` to `scope` to match the naming on the SDK and avoid confusion
 
 ### New Features
 
@@ -22,7 +22,35 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 - None
 
-## v0.5.1 - Latest release
+## v0.5.4 - Latest release
+
+### Breaking Changes
+
+- None
+
+### New Features
+
+- Support new unique identifier of mock passports now set to 1 instead of 0
+
+### Bug Fixes
+
+- Fix an issue where the SDK would fail to verify proofs generated with a different versions of the proof than the latest one
+
+## v0.5.3
+
+### Breaking Changes
+
+- None
+
+### New Features
+
+- Allow to specify a custom path for the writing directory of the verification artifacts to facilitate the use of the SDK in serverless environments such as Next.js functions
+
+### Bug Fixes
+
+- None
+
+## v0.5.1
 
 ### Breaking Changes
 
