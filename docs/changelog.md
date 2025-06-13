@@ -12,6 +12,20 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 ### Breaking Changes
 
+- None
+
+### New Features
+
+- None
+
+### Bug Fixes
+
+- None
+
+## v0.5.5 - Latest release
+
+### Breaking Changes
+
 - The Solidity verifier now take slightly different parameters as `scope` was renamed to `domain` and `subscope` to `scope` to match the naming on the SDK and avoid confusion
 
 ### New Features
@@ -22,7 +36,7 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 - None
 
-## v0.5.4 - Latest release
+## v0.5.4
 
 ### Breaking Changes
 
