@@ -160,8 +160,8 @@ struct ProofVerificationParams {
   bytes committedInputs;
   uint256[] committedInputCounts;
   uint256 validityPeriodInDays;
+  string domain;
   string scope;
-  string subscope;
   bool devMode;
 }
 

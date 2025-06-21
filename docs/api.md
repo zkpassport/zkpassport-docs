@@ -576,8 +576,8 @@ interface SolidityVerifierParameters = {
   committedInputs: string
   committedInputCounts: number[]
   validityPeriodInDays: number
+  domain: string
   scope: string
-  subscope: string
   devMode: boolean
 }
 ```
