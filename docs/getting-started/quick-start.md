@@ -27,3 +27,5 @@ import { ZKPassport } from "@zkpassport/sdk";
 And that's it, that's all you need to do to get started. No API key, no need to create an account, just install the package and you're good to go.
 
 To see how to use the SDK to request information from users, check out the [Basic Usage](./basic-usage) guide.
+
+Looking for a quick start? You can check out our Next.js boilerplate [here](https://github.com/zkpassport/zkpassport-sdk-example).
