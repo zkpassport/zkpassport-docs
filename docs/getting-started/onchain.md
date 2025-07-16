@@ -40,8 +40,6 @@ const queryBuilder = await zkPassport.request({
   scope: "my-scope",
   // To verify proofs on EVM chains, you need to set the mode to "compressed-evm"
   mode: "compressed-evm",
-  // Specify the EVM chain where the proof will be verified, for now only `ethereum_sepolia` is supported
-  evmChain: "ethereum_sepolia",
 });
 
 // Build your query with the required attributes or conditions you want to verify
@@ -63,6 +61,8 @@ const {
   .gte("age", 18)
   // Bind the user's address to the proof
   .bind("user_address", "0x1234567890123456789012345678901234567890")
+  // Bind to the chain where the proof will be verified
+  .bind("chain", "ethereum_sepolia")
   // Bind custom data to the proof
   .bind("custom_data", "my-custom-data")
   // Finalize the query
@@ -207,7 +207,7 @@ interface IZKPassportVerifier {
     uint256[] calldata committedInputCounts
   ) external pure returns (bytes memory data);
   // Get the bound data from the raw data returned by the getBindProofInputs function
-  function getBoundData(bytes calldata data) external view returns (address userAddress, string memory customData);
+  function getBoundData(bytes calldata data) external view returns (address userAddress, uint256 chainId, string memory customData);
   // Verify the scope of the proof
   function verifyScopes(bytes32[] calldata publicInputs, string calldata domain, string calldata scope) external view returns (bool);
 }
@@ -268,9 +268,11 @@ contract YourContract {
         );
         // Use the getBoundData function to get the formatted data
         // which includes the user's address and any custom data
-        (address userAddress, string memory customData) = zkPassportVerifier.getBoundData(data);
+        (address userAddress, uint256 chainId, string memory customData) = zkPassportVerifier.getBoundData(data);
         // Make sure the user's address is the one that is calling the contract
         require(userAddress == msg.sender, "Not the expected sender");
+        // Make sure the chain id is the same as the one you specified in the query builder
+        require(chainId == block.chainid, "Invalid chain id");
         // You could also check the custom data if you bound any to the proof
         require(customData == "my-custom-data", "Invalid custom data");
         // If you didn't specify any custom data, make sure the string is empty

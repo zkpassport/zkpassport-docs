@@ -30,7 +30,6 @@ async request(options: {
   logo: string;
   purpose: string;
   scope?: string;
-  evmChain?: EVMChain;
   validity?: number;
   devMode?: boolean;
   cloudProverUrl?: string;
@@ -45,8 +44,7 @@ Parameters:
 - `name`: Your application name
 - `logo`: URL to your application's logo
 - `purpose`: Description of why you're requesting verification
-- `scope` (optional): Scope for the unique identifier
-- `evmChain` (optional): Specify the EVM chain for proofs meant to be verified onchain (just `ethereum_sepolia` for now)
+- `scope` (optional): Scope for the unique identifiers
 - `validity` (optional): Number of days ago the ID should have been last scanned (defaults to 180 days)
 - `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode will accept mock proofs generated from the mock passports in the app.
 - `cloudProverUrl` (optional): The url of the cloud prover to use for compressed proofs. Defaults to ZKPassport's Cloud Prover.
@@ -61,14 +59,12 @@ async verify({
   proofs,
   queryResult,
   scope,
-  evmChain,
   devMode,
   validity,
 }: {
   proofs: Array<ProofResult>;
   queryResult: QueryResult;
   scope?: string;
-  evmChain?: EVMChain;
   devMode?: boolean;
   validity?: number;
 }): Promise<{
@@ -85,7 +81,6 @@ Parameters:
 - `proofs`: The proofs to verify
 - `queryResult`: The query result to verify against
 - `scope` (optional): The scope used when requesting the proof
-- `evmChain` (optional): Specify the EVM chain for proofs meant to be verified onchain (just `ethereum_sepolia` for now)
 - `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode will accept mock proofs generated from the mock passports in the app.
 - `validity` (optional): Number of days ago the ID should have been last scanned (defaults to 180 days)
 
@@ -98,7 +93,7 @@ Returns an object containing:
 #### getSolidityVerifierDetails
 
 ```typescript
-getSolidityVerifierDetails(network: EVMChain): {
+getSolidityVerifierDetails(network: SupportedChain): {
   address: `0x${string}`
   functionName: string
   abi: {
@@ -330,7 +325,7 @@ Can be used with any ID credential field:
 #### bind
 
 ```typescript
-bind(key: "user_address" | "custom_data", value: string): QueryBuilder
+bind(key: "user_address" | "chain" | "custom_data", value: string): QueryBuilder
 ```
 
 Binds data to the proof.
@@ -340,6 +335,7 @@ Note: The total size of the data cannot exceed 500 bytes.
 Currently supported:
 
 - `user_address`: The user's address such as an Ethereum address. This is treated as raw bytes.
+- `chain`: The chain where the proof will be verified. This is converted to the appropriate chain id.
 - `custom_data`: Custom data to be attached to the proof. This is treated as ASCII encoded text.
 
 #### done
@@ -524,6 +520,7 @@ interface QueryResult {
   };
   bind?: {
     user_address?: string;
+    chain?: SupportedChain;
     custom_data?: string;
   };
 }
@@ -588,6 +585,7 @@ interface SolidityVerifierParameters = {
 type CountryName = string; // Type for country names
 type Alpha3Code = string; // Type for ISO 3166-1 alpha-3 country codes
 type IDCredential = string; // Type for ID credential fields
+type SupportedChain = "ethereum_sepolia"; // Type for supported chains
 
 // Type for numerical fields that can be compared
 type NumericalIDCredential = "age" | "birthdate" | "expiry_date";
