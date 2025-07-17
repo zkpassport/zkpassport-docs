@@ -22,7 +22,23 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 - None
 
-## v0.5.5 - Latest release
+## v0.6.0 - Latest release
+
+### Breaking Changes
+
+- The chain id is no longer included in the scope of the proof, which changes the logic of the smart contract verifier. So a new contract has been deployed.
+- The derivation of the unique identifier has changed slightly to be more future proof, so unique identifiers will change between the previous versions of the SDK and this one.
+- The proving system for the proofs has been updated. Proofs generated with previous version of the mobile app (prior to 0.8.0) will not work with this version of the SDK.
+
+### New Features
+
+- The `bind` method now accepts a `chain` parameter to bind the chain id to the proof.
+
+### Bug Fixes
+
+- None
+
+## v0.5.5
 
 ### Breaking Changes
 
