@@ -22,7 +22,35 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 - None
 
-## v0.6.0 - Latest release
+## v0.7.1 - Latest release
+
+### Breaking Changes
+
+- None
+
+### New Features
+
+- Stronger types for the results returned by the SDK in the onResult callback
+
+### Bug Fixes
+
+- Fix some issues with date parsing and comparison for birthdate and expiry date related queries
+
+## v0.7.0
+
+### Breaking Changes
+
+- The proving system for the proofs has been updated. Proofs generated with previous version of the mobile app (prior to 0.8.5) will not work with this version of the SDK.
+
+### New Features
+
+- None
+
+### Bug Fixes
+
+- None
+
+## v0.6.0
 
 ### Breaking Changes
 
