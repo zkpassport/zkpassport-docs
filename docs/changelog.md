@@ -22,7 +22,23 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 - None
 
-## v0.7.1 - Latest release
+## v0.8.3 - Latest release
+
+### Breaking Changes
+
+- New smart contract verifier with the validity period now set in seconds rather than days
+
+### New Features
+
+- Sanction list checks, for now only against the OFAC SDN list
+- Proofs now support dates precise to the seconds (using Unix timestamps rather date strings)
+- Facilitate the declaration of the domain name in ZKPassport constructor (the value is parsed to make sure it's a valid domain name)
+
+### Bug Fixes
+
+- None
+
+## v0.7.1
 
 ### Breaking Changes
 

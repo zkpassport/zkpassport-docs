@@ -28,4 +28,6 @@ And that's it, that's all you need to do to get started. No API key, no need to 
 
 To see how to use the SDK to request information from users, check out the [Basic Usage](./basic-usage) guide.
 
+:::tip
 Looking for a quick start? You can check out our Next.js boilerplate [here](https://github.com/zkpassport/zkpassport-sdk-example).
+:::
