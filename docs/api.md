@@ -240,25 +240,28 @@ Currently supported for:
 #### lt (Less Than)
 
 ```typescript
-lt<T extends "age">(key: T, value: IDCredentialValue<T>): QueryBuilder
+lt<T extends NumericalIDCredential>(key: T, value: IDCredentialValue<T>): QueryBuilder
 ```
 
-Verifies if a numeric field is less than a value.
+Verifies if a numeric field is strictly less than a value.
 
-Currently only supported for:
+Currently supported for:
 
 - `age`: Check if the user is younger than a certain age
+- `birthdate`: Check if the birthdate is before a specific date
+- `expiry_date`: Check if the ID expires before a specific date
 
 #### lte (Less Than or Equal)
 
 ```typescript
-lte<T extends "birthdate" | "expiry_date">(key: T, value: IDCredentialValue<T>): QueryBuilder
+lte<T extends NumericalIDCredential>(key: T, value: IDCredentialValue<T>): QueryBuilder
 ```
 
-Verifies if a date field is less than or equal to a value.
+Verifies if a numeric field is less than or equal to a value.
 
 Currently supported for:
 
+- `age`: Check if the user is at most a certain age
 - `birthdate`: Check if the birthdate is before or on a specific date
 - `expiry_date`: Check if the ID expires before or on a specific date
 
@@ -272,7 +275,7 @@ range<T extends NumericalIDCredential>(
 ): QueryBuilder
 ```
 
-Verifies if a numeric field is within a range (inclusive start, exclusive end).
+Verifies if a numeric field is within a range (inclusive start and end).
 
 Currently supported for:
 

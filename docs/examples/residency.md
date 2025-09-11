@@ -50,7 +50,7 @@ const queryBuilder = await zkPassport.request({
   name: "ZKPassport",
   logo: "https://zkpassport.id/logo.png",
   purpose: "Prove you are resident in France",
-  scope: "france-resident",
+  scope: "eu-resident",
 });
 
 const { url, onResult } = queryBuilder
