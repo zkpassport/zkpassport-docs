@@ -18,7 +18,7 @@ Onchain verification enables your smart contracts to:
 
 ## Verifier Contract
 
-ZKPassport maintains a deployed [`ZKPassportVerifier`](https://sepolia.etherscan.io/address/0x8c6982d77f7a8f60ae3133ca9b2faa6f3e78c394#code) contract on Sepolia that handles all proof verification. Your contracts will interact with this verifier.
+ZKPassport maintains a deployed [`ZKPassportVerifier`](https://sepolia.etherscan.io/address/0xBec82dec0747C9170D760D5aba9cc44929B17C05#code) contract on Sepolia that handles all proof verification. Your contracts will interact with this verifier.
 
 ## Integration Steps
 
@@ -159,7 +159,7 @@ struct ProofVerificationParams {
   bytes32[] publicInputs;
   bytes committedInputs;
   uint256[] committedInputCounts;
-  uint256 validityPeriodInDays;
+  uint256 validityPeriodInSeconds;
   string domain;
   string scope;
   bool devMode;
