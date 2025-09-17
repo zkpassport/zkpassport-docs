@@ -249,7 +249,7 @@ interface IZKPassportVerifier {
   function isAgeAboveOrEqual(
     uint8 minAge,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the age is above the given age
@@ -260,7 +260,7 @@ interface IZKPassportVerifier {
   function isAgeAbove(
     uint8 minAge,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the age is in the given range
@@ -273,7 +273,7 @@ interface IZKPassportVerifier {
     uint8 minAge,
     uint8 maxAge,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the age is below or equal to the given age
@@ -284,7 +284,7 @@ interface IZKPassportVerifier {
   function isAgeBelowOrEqual(
     uint8 maxAge,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the age is below the given age
@@ -295,7 +295,7 @@ interface IZKPassportVerifier {
   function isAgeBelow(
     uint8 maxAge,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the age is equal to the given age
@@ -306,7 +306,7 @@ interface IZKPassportVerifier {
   function isAgeEqual(
     uint8 age,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   // ===== Birthdate comparison =====
 
@@ -319,7 +319,7 @@ interface IZKPassportVerifier {
   function isBirthdateAfterOrEqual(
     uint256 minDate,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the birthdate is after the given date
@@ -330,7 +330,7 @@ interface IZKPassportVerifier {
   function isBirthdateAfter(
     uint256 minDate,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the birthdate is between the given dates
@@ -343,7 +343,7 @@ interface IZKPassportVerifier {
     uint256 minDate,
     uint256 maxDate,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the birthdate is before or equal to the given date
@@ -354,7 +354,7 @@ interface IZKPassportVerifier {
   function isBirthdateBeforeOrEqual(
     uint256 maxDate,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the birthdate is before the given date
@@ -376,7 +376,7 @@ interface IZKPassportVerifier {
   function isBirthdateEqual(
     uint256 date,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   // ===== Expiry date comparison =====
 
@@ -400,7 +400,7 @@ interface IZKPassportVerifier {
   function isExpiryDateAfter(
     uint256 minDate,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the expiry date is between the given dates
@@ -413,7 +413,7 @@ interface IZKPassportVerifier {
     uint256 minDate,
     uint256 maxDate,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the expiry date is before or equal to the given date
@@ -424,7 +424,7 @@ interface IZKPassportVerifier {
   function isExpiryDateBeforeOrEqual(
     uint256 maxDate,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the expiry date is before the given date
@@ -435,7 +435,7 @@ interface IZKPassportVerifier {
   function isExpiryDateBefore(
     uint256 maxDate,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   /**
    * @notice Checks if the expiry date is equal to the given date
@@ -446,7 +446,7 @@ interface IZKPassportVerifier {
   function isExpiryDateEqual(
     uint256 date,
     ProofVerificationParams calldata params
-  ) public view returns (bool);
+  ) external view returns (bool);
 
   // ===== Country inclusion =====
 
@@ -459,7 +459,7 @@ interface IZKPassportVerifier {
   function isNationalityIn(
     string[] memory countryList,
     ProofVerificationParams calldata params
-  ) public pure returns (bool);
+  ) external pure returns (bool);
 
   /**
    * @notice Checks if the issuing country is in the list of countries
@@ -470,7 +470,7 @@ interface IZKPassportVerifier {
   function isIssuingCountryIn(
     string[] memory countryList,
     ProofVerificationParams calldata params
-  ) public pure returns (bool);
+  ) external pure returns (bool);
 
   // ===== Country exclusion =====
 
@@ -484,7 +484,7 @@ interface IZKPassportVerifier {
   function isNationalityOut(
     string[] memory countryList,
     ProofVerificationParams calldata params
-  ) public pure returns (bool);
+  ) external pure returns (bool);
 
   /**
    * @notice Checks if the issuing country is not in the list of countries
@@ -496,7 +496,7 @@ interface IZKPassportVerifier {
   function isIssuingCountryOut(
     string[] memory countryList,
     ProofVerificationParams calldata params
-  ) public pure returns (bool);
+  ) external pure returns (bool);
 
   // ===== Sanction checks =====
   /**
@@ -505,7 +505,7 @@ interface IZKPassportVerifier {
    */
   function enforceSanctionsRoot(
     ProofVerificationParams calldata params
-  ) public view;
+  ) external view;
 }
 
 contract YourContract {
