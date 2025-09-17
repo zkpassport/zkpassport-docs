@@ -18,7 +18,7 @@ Onchain verification enables your smart contracts to:
 
 ## Verifier Contract
 
-ZKPassport maintains a deployed [`ZKPassportVerifier`](https://sepolia.etherscan.io/address/0xBec82dec0747C9170D760D5aba9cc44929B17C05#code) contract on Sepolia that handles all proof verification. Your contracts will interact with this verifier.
+ZKPassport maintains a deployed [`ZKPassportVerifier`](https://sepolia.etherscan.io/address/0xE486bdA3e2f8a6e00c6E2d3a4ADb0A7aa7b1cEe9#code) contract on Sepolia that handles all proof verification. Your contracts will interact with this verifier.
 
 ## Integration Steps
 
@@ -142,17 +142,44 @@ Create a contract that interacts with the verifier:
 ```solidity
 pragma solidity ^0.8.21;
 
-enum ProofType {
-  DISCLOSE,
-  AGE,
-  BIRTHDATE,
-  EXPIRY_DATE,
-  NATIONALITY_INCLUSION,
-  NATIONALITY_EXCLUSION,
-  ISSUING_COUNTRY_INCLUSION,
-  ISSUING_COUNTRY_EXCLUSION
+/**
+ * @notice The data that can be bound to the proof
+ */
+struct BoundData {
+  // The address of the ID holder
+  userAddress: address;
+  // The chain id (block.chainid)
+  chainId: uint256;
+  // The custom data (encoded as ASCII string)
+  customData: string;
 }
 
+/**
+ * @notice The data that can be disclosed by the proof
+ */
+struct DisclosedData {
+    // The name of the ID holder (includes the angular brackets from the MRZ)
+    string name;
+    // The issuing country of the ID
+    string issuingCountry;
+    // The nationality of the ID holder
+    string nationality;
+    // The gender of the ID holder
+    string gender;
+    // The birth date of the ID holder
+    string birthDate;
+    // The expiry date of the ID
+    string expiryDate;
+    // The document number of the ID
+    string documentNumber;
+    // The type of the document
+    string documentType;
+}
+
+/**
+ * @notice The parameters for verifying a proof
+ * @dev this can be retrieved with the getSolidityVerifierParameters function in the SDK
+ */
 struct ProofVerificationParams {
   bytes32 vkeyHash;
   bytes proof;
@@ -165,51 +192,320 @@ struct ProofVerificationParams {
   bool devMode;
 }
 
+/**
+ * @notice The public interface for the ZKPassport verifier contract
+ */
 interface IZKPassportVerifier {
-  // Verify the proof
+  /**
+   * @notice Verifies a proof from ZKPassport
+   * @param params The proof verification parameters
+   * @return isValid True if the proof is valid, false otherwise
+   * @return uniqueIdentifier The unique identifier associated to the identity document that generated the proof
+   */
   function verifyProof(ProofVerificationParams calldata params) external returns (bool verified, bytes32 uniqueIdentifier);
-  // Get the inputs for the age proof
-  function getAgeProofInputs(bytes calldata committedInputs, uint256[] calldata committedInputCounts) external view returns (uint256 currentDate, uint8 minAge, uint8 maxAge);
-  // Get the inputs for the disclose proof
-  function getDiscloseProofInputs(
-    bytes calldata committedInputs,
-    uint256[] calldata committedInputCounts
-  ) external pure returns (bytes memory discloseMask, bytes memory discloseBytes);
-  // Get the disclosed data from the proof
-  function getDisclosedData(
-    bytes calldata discloseBytes,
-    bool isIDCard
-  ) external view returns (
-    string memory name,
-    string memory issuingCountry,
-    string memory nationality,
-    string memory gender,
-    string memory birthDate,
-    string memory expiryDate,
-    string memory documentNumber,
-    string memory documentType
-  );
-  // Get the inputs for the nationality/issuing country inclusion and exclusion proofs
-  function getCountryProofInputs(
-    bytes calldata committedInputs,
-    uint256[] calldata committedInputCounts,
-    ProofType proofType
-  ) external pure returns (string[] memory countryList);
-  // Get the inputs for the birthdate and expiry date proofs
-  function getDateProofInputs(
-    bytes calldata committedInputs,
-    uint256[] calldata committedInputCounts,
-    ProofType proofType
-  ) external pure returns (uint256 currentDate, uint256 minDate, uint256 maxDate);
-  // Get the inputs for the bind proof
-  function getBindProofInputs(
-    bytes calldata committedInputs,
-    uint256[] calldata committedInputCounts
-  ) external pure returns (bytes memory data);
-  // Get the bound data from the raw data returned by the getBindProofInputs function
-  function getBoundData(bytes calldata data) external view returns (address userAddress, uint256 chainId, string memory customData);
-  // Verify the scope of the proof
+
+  /**
+   * @notice Verifies that the proof was generated for the given domain and scope
+   * @param publicInputs The public inputs of the proof
+   * @param domain The domain to check against
+   * @param scope The scope to check against
+   * @return True if the proof was generated for the given domain and scope, false otherwise
+   */
   function verifyScopes(bytes32[] calldata publicInputs, string calldata domain, string calldata scope) external view returns (bool);
+
+  // ===== Helper functions to get the information revealed by the proof =====
+
+  // ===== Retrieve the disclosed data =====
+
+  /**
+   * @notice Gets the data disclosed by the proof
+   * @param params The proof verification parameters
+   * @param isIDCard Whether the proof is an ID card
+   * @return disclosedData The data disclosed by the proof
+   */
+  function getDisclosedData(
+    ProofVerificationParams calldata params,
+    bool isIDCard
+  ) external view returns (DisclosedData);
+
+
+  // ===== Retrieve the bound data =====
+
+  /**
+   * @notice Gets the data bound to the proof
+   * @param params The proof verification parameters
+   * @return boundData The data bound to the proof
+   */
+  function getBoundData(ProofVerificationParams calldata params) external view returns (BoundData);
+
+  // ===== Age verification =====
+
+  /**
+   * @notice Checks if the age is above or equal to the given age
+   * @param minAge The age must be above or equal to this age
+   * @param params The proof verification parameters
+   * @return True if the age is above or equal to the given age, false otherwise
+   */
+  function isAgeAboveOrEqual(
+    uint8 minAge,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the age is above the given age
+   * @param minAge The age must be above this age
+   * @param params The proof verification parameters
+   * @return True if the age is above the given age, false otherwise
+   */
+  function isAgeAbove(
+    uint8 minAge,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the age is in the given range
+   * @param minAge The age must be greater than or equal to this age
+   * @param maxAge The age must be less than or equal to this age
+   * @param params The proof verification parameters
+   * @return True if the age is in the given range, false otherwise
+   */
+  function isAgeBetween(
+    uint8 minAge,
+    uint8 maxAge,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the age is below or equal to the given age
+   * @param maxAge The age must be below or equal to this age
+   * @param params The proof verification parameters
+   * @return True if the age is below or equal to the given age, false otherwise
+   */
+  function isAgeBelowOrEqual(
+    uint8 maxAge,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the age is below the given age
+   * @param maxAge The age must be below this age
+   * @param params The proof verification parameters
+   * @return True if the age is below the given age, false otherwise
+   */
+  function isAgeBelow(
+    uint8 maxAge,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the age is equal to the given age
+   * @param age The age must be equal to this age
+   * @param params The proof verification parameters
+   * @return True if the age is equal to the given age, false otherwise
+   */
+  function isAgeEqual(
+    uint8 age,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  // ===== Birthdate comparison =====
+
+  /**
+   * @notice Checks if the birthdate is after or equal to the given date
+   * @param minDate The birthdate must be after or equal to this date
+   * @param params The proof verification parameters
+   * @return True if the birthdate is after or equal to the given date, false otherwise
+   */
+  function isBirthdateAfterOrEqual(
+    uint256 minDate,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the birthdate is after the given date
+   * @param minDate The birthdate must be after this date
+   * @param params The proof verification parameters
+   * @return True if the birthdate is after the given date, false otherwise
+   */
+  function isBirthdateAfter(
+    uint256 minDate,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the birthdate is between the given dates
+   * @param minDate The birthdate must be after or equal to this date
+   * @param maxDate The birthdate must be before or equal to this date
+   * @param params The proof verification parameters
+   * @return True if the birthdate is between the given dates, false otherwise
+   */
+  function isBirthdateBetween(
+    uint256 minDate,
+    uint256 maxDate,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the birthdate is before or equal to the given date
+   * @param maxDate The birthdate must be before or equal to this date
+   * @param params The proof verification parameters
+   * @return True if the birthdate is before or equal to the given date, false otherwise
+   */
+  function isBirthdateBeforeOrEqual(
+    uint256 maxDate,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the birthdate is before the given date
+   * @param maxDate The birthdate must be before this date
+   * @param params The proof verification parameters
+   * @return True if the birthdate is before the given date, false otherwise
+   */
+  function isBirthdateBefore(
+    uint256 maxDate,
+      ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the birthdate is equal to the given date
+   * @param date The birthdate must be equal to this date
+   * @param params The proof verification parameters
+   * @return True if the birthdate is equal to the given date, false otherwise
+   */
+  function isBirthdateEqual(
+    uint256 date,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  // ===== Expiry date comparison =====
+
+  /**
+   * @notice Checks if the expiry date is after or equal to the given date
+   * @param minDate The expiry date must be after or equal to this date
+   * @param params The proof verification parameters
+   * @return True if the expiry date is after or equal to the given date, false otherwise
+   */
+  function isExpiryDateAfterOrEqual(
+    uint256 minDate,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the expiry date is after the given date
+   * @param minDate The expiry date must be after this date
+   * @param params The proof verification parameters
+   * @return True if the expiry date is after the given date, false otherwise
+   */
+  function isExpiryDateAfter(
+    uint256 minDate,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the expiry date is between the given dates
+   * @param minDate The expiry date must be after or equal to this date
+   * @param maxDate The expiry date must be before or equal to this date
+   * @param params The proof verification parameters
+   * @return True if the expiry date is between the given dates, false otherwise
+   */
+  function isExpiryDateBetween(
+    uint256 minDate,
+    uint256 maxDate,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the expiry date is before or equal to the given date
+   * @param maxDate The expiry date must be before or equal to this date
+   * @param params The proof verification parameters
+   * @return True if the expiry date is before or equal to the given date, false otherwise
+   */
+  function isExpiryDateBeforeOrEqual(
+    uint256 maxDate,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the expiry date is before the given date
+   * @param maxDate The expiry date must be before this date
+   * @param params The proof verification parameters
+   * @return True if the expiry date is before the given date, false otherwise
+   */
+  function isExpiryDateBefore(
+    uint256 maxDate,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  /**
+   * @notice Checks if the expiry date is equal to the given date
+   * @param date The expiry date must be equal to this date
+   * @param params The proof verification parameters
+   * @return True if the expiry date is equal to the given date, false otherwise
+   */
+  function isExpiryDateEqual(
+    uint256 date,
+    ProofVerificationParams calldata params
+  ) public view returns (bool);
+
+  // ===== Country inclusion =====
+
+  /**
+   * @notice Checks if the nationality is in the list of countries
+   * @param countryList The list of countries (needs to match exactly the list of countries in the proof)
+   * @param params The proof verification parameters
+   * @return True if the nationality is in the list of countries, false otherwise
+   */
+  function isNationalityIn(
+    string[] memory countryList,
+    ProofVerificationParams calldata params
+  ) public pure returns (bool);
+
+  /**
+   * @notice Checks if the issuing country is in the list of countries
+   * @param countryList The list of countries (needs to match exactly the list of countries in the proof)
+   * @param params The proof verification parameters
+   * @return True if the issuing country is in the list of countries, false otherwise
+   */
+  function isIssuingCountryIn(
+    string[] memory countryList,
+    ProofVerificationParams calldata params
+  ) public pure returns (bool);
+
+  // ===== Country exclusion =====
+
+  /**
+   * @notice Checks if the nationality is not in the list of countries
+   * @param countryList The list of countries (needs to match exactly the list of countries in the proof)
+   * Note: The list of countries must be sorted in alphabetical order
+   * @param params The proof verification parameters
+   * @return True if the nationality is not in the list of countries, false otherwise
+   */
+  function isNationalityOut(
+    string[] memory countryList,
+    ProofVerificationParams calldata params
+  ) public pure returns (bool);
+
+  /**
+   * @notice Checks if the issuing country is not in the list of countries
+   * @param countryList The list of countries (needs to match exactly the list of countries in the proof)
+   * Note: The list of countries must be sorted in alphabetical order
+   * @param params The proof verification parameters
+   * @return True if the issuing country is not in the list of countries, false otherwise
+   */
+  function isIssuingCountryOut(
+    string[] memory countryList,
+    ProofVerificationParams calldata params
+  ) public pure returns (bool);
+
+  // ===== Sanction checks =====
+  /**
+   * @notice Enforces that the proof checks against the expected sanction list(s)
+   * @param params The proof verification parameters
+   */
+  function enforceSanctionsRoot(
+    ProofVerificationParams calldata params
+  ) public view;
 }
 
 contract YourContract {
@@ -234,49 +530,30 @@ contract YourContract {
           "Invalid scope"
         );
 
-        // Get the age condition checked in the proof
-        (uint256 currentDate, uint8 minAge, uint8 maxAge) = zkPassportVerifier.getAgeProofInputs(
-          params.committedInputs,
-          params.committedInputCounts
+        // Check if the user is at least 18 years old
+        bool isAgeAboveOrEqual = zkPassportVerifier.isAgeAboveOrEqual(
+          18,
+          params
         );
-        // Make sure the date used for the proof makes sense
-        require(block.timestamp >= currentDate, "Date used in proof is in the future");
-        // This is the condition for checking the age is 18 or above
-        // Max age is set to 0 and therefore ignored in the proof, so it's equivalent to no upper limit
-        // Min age is set to 18, so the user needs to be at least 18 years old
-        require(minAge == 18 && maxAge == 0, "User needs to be above 18");
 
-        // Get the disclosed bytes of data from the proof
-        (, bytes memory disclosedBytes) = zkPassportVerifier.getDiscloseProofInputs(
-          params.committedInputs,
-          params.committedInputCounts
-        );
-        // Get the nationality from the disclosed data and ignore the rest
-        // Passing the disclosed bytes returned by the previous function
-        // this function will format it for you so you can use the data you need
-        (, , string memory nationality, , , , , ) = zkPassportVerifier.getDisclosedData(
-          disclosedBytes,
+        // Get the disclosed data to retrieve the nationality
+        DisclosedData memory disclosedData = zkPassportVerifier.getDisclosedData(
+          params,
           isIDCard
         );
+        // Alpha 3 code of the nationality (e.g. FRA, USA, etc.)
+        string memory nationality = disclosedData.nationality;
 
-
-        // Get the raw data bound to the proof
-        // This is the data you bound to the proof using the bind method in the query builder
-        bytes memory data = zkPassportVerifier.getBindProofInputs(
-          params.committedInputs,
-          params.committedInputCounts
-        );
-        // Use the getBoundData function to get the formatted data
-        // which includes the user's address and any custom data
-        (address userAddress, uint256 chainId, string memory customData) = zkPassportVerifier.getBoundData(data);
+        // Use the getBoundData function to get the data bound to the proof
+        BoundData memory boundData = zkPassportVerifier.getBoundData(params);
         // Make sure the user's address is the one that is calling the contract
-        require(userAddress == msg.sender, "Not the expected sender");
+        require(boundData.userAddress == msg.sender, "Not the expected sender");
         // Make sure the chain id is the same as the one you specified in the query builder
-        require(chainId == block.chainid, "Invalid chain id");
+        require(boundData.chainId == block.chainid, "Invalid chain id");
         // You could also check the custom data if you bound any to the proof
-        require(customData == "my-custom-data", "Invalid custom data");
+        require(boundData.customData == "my-custom-data", "Invalid custom data");
         // If you didn't specify any custom data, make sure the string is empty
-        // require(bytes(customData).length == 0, "Custom data should be empty");
+        // require(bytes(boundData.customData).length == 0, "Custom data should be empty");
 
         // Store the unique identifier
         userIdentifiers[msg.sender] = uniqueIdentifier;
