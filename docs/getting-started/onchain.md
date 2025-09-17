@@ -220,7 +220,7 @@ interface IZKPassportVerifier {
   /**
    * @notice Gets the data disclosed by the proof
    * @param params The proof verification parameters
-   * @param isIDCard Whether the proof is an ID card
+   * @param isIDCard Whether the proof is from an ID card
    * @return disclosedData The data disclosed by the proof
    */
   function getDisclosedData(
