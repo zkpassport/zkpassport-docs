@@ -11,4 +11,6 @@ If you are not entirely sure what you can do with the SDK, you can check some of
 - [Residency](./residency.md) - Discover how to verify a user's residency status
 - [Personhood](./personhood.md) - Learn how to check the personhood of a user
 - [KYC](./kyc.md) - Learn how to verify some information that can be useful for KYC
-- [Client-Server Implementation](./client-server.md) - See how to use the SDK on the client-side and verify proofs on the server-side
+- [Client-Server Implementation](./client-server.md) - See how to use the SDK on the client-side and verify proofs on the
+  server-side
+- [Private FaceMatch](./facematch.md) - Verify the ID holder's face matches the ID photo

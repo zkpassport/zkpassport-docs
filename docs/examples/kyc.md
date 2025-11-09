@@ -7,7 +7,7 @@ sidebar_position: 6
 Full KYC verification (excluding AML/CTF checks) is in theory possible with ZKPassport, but there are some limitations that may prevent it from meeting all the legal requirements of a KYC:
 
 - Neither the SDK nor the app checks whether the ID was reported stolen or lost
-- While sanctions checks are conducted, no full AML/CTF checks are conducted
+- While sanctions checks can be conducted, no full AML/CTF checks are conducted
 
 ## Example of simple KYC
 

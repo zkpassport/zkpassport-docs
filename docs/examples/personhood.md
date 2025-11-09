@@ -9,7 +9,7 @@ Each ID will have its own unique identifier. This identifier doesn't reveal any 
 Following this logic, you can use this as a base to check the personhood of the user, i.e. if the user is a real person and not a bot. However, there are a few limitations to this:
 
 - A person can have multiple IDs, so if you want to have `one person <-> one account` for example, it won't be exactly that but more `one ID <-> one account`.
-- If you want to have a truly robust proof of personhood, you should use facematch in your query. And for greater protection against spoofing, you should use the `strict` mode.
+- If you want to have a truly robust proof of personhood, you should use [FaceMatch](./facematch.md) in your query. And for greater protection against spoofing, you should use the `strict` mode.
 
 ## Check uniqueness
 
