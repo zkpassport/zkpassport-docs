@@ -43,6 +43,11 @@ const sidebars: SidebarsConfig = {
           label: "Client-Server",
           id: "examples/client-server",
         },
+        {
+          type: "doc",
+          label: "Private FaceMatch",
+          id: "examples/facematch",
+        },
       ],
     },
     "api",
