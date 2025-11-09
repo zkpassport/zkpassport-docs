@@ -529,34 +529,36 @@ contract YourContract {
 
     function register(ProofVerificationParams calldata params, bool isIDCard) public returns (bytes32) {
         // Verify the proof
-        (bool verified, bytes32 uniqueIdentifier) = zkPassportVerifier.verifyProof(params);
+        (bool verified, bytes32 uniqueIdentifier, IZKPassportHelper helper) = zkPassportVerifier.verifyProof(params);
         require(verified, "Proof is invalid");
 
         // Check the proof was generated using your domain name (scope) and the subscope
         // you specified
         require(
-          zkPassportVerifier.verifyScopes(params.publicInputs, "your-domain.com", "my-scope"),
+          helper.verifyScopes(params.publicInputs, "your-domain.com", "my-scope"),
           "Invalid scope"
         );
 
         // Check if the user is at least 18 years old
-        bool isAgeAboveOrEqual = zkPassportVerifier.isAgeAboveOrEqual(
+        bool isAgeAboveOrEqual = helper.isAgeAboveOrEqual(
           18,
-          params
+          params.committedInputs
         );
 
         // Get the disclosed data to retrieve the nationality
-        DisclosedData memory disclosedData = zkPassportVerifier.getDisclosedData(
-          params,
+        DisclosedData memory disclosedData = helper.getDisclosedData(
+          params.committedInputs,
           isIDCard
         );
         // Alpha 3 code of the nationality (e.g. FRA, USA, etc.)
+        // Warning: as it is the raw MRZ bytes, Germany will be "D<<" and not "DEU"
+        // Other countries follow the standard ISO 3166-1 alpha-3 code format.
         string memory nationality = disclosedData.nationality;
 
         // Use the getBoundData function to get the data bound to the proof
-        BoundData memory boundData = zkPassportVerifier.getBoundData(params);
+        BoundData memory boundData = helper.getBoundData(params.committedInputs);
         // Make sure the user's address is the one that is calling the contract
-        require(boundData.userAddress == msg.sender, "Not the expected sender");
+        require(boundData.senderAddress == msg.sender, "Not the expected sender");
         // Make sure the chain id is the same as the one you specified in the query builder
         require(boundData.chainId == block.chainid, "Invalid chain id");
         // You could also check the custom data if you bound any to the proof
