@@ -6,9 +6,8 @@ sidebar_position: 6
 
 Full KYC verification (excluding AML/CTF checks) is in theory possible with ZKPassport, but there are some limitations that may prevent it from meeting all the legal requirements of a KYC:
 
-- The ID's photo is not yet verified against the user's face
-- Neither SDK nor the app checks whether the ID was reported stolen or lost
-- No AML/CTF checks are conducted
+- Neither the SDK nor the app checks whether the ID was reported stolen or lost
+- While sanctions checks are conducted, no full AML/CTF checks are conducted
 
 ## Example of simple KYC
 
@@ -37,6 +36,10 @@ const { url, onResult } = queryBuilder
   .disclose("expiry_date")
   // This is sensitive information, so be careful when handling it
   .disclose("document_number")
+  // Check the user is not on any of the available sanctions lists (US, UK, EU, Switzerland)
+  .sanctions()
+  // Verify the person generating the proof is the one on the ID
+  .facematch("strict")
   .done();
 
 onResult(({ verified, result }) => {
@@ -46,6 +49,14 @@ onResult(({ verified, result }) => {
     const fullname = result.fullname.disclose.result;
     const expiryDate = result.expiry_date.disclose.result;
     const documentNumber = result.document_number.disclose.result;
+    const faceMatchVerified = result.facematch.passed;
+    const sanctionsVerified = result.sanctions.passed;
+    if (!faceMatchVerified) {
+      console.log("FaceMatch verification failed");
+    }
+    if (!sanctionsVerified) {
+      console.log("Sanctions check failed");
+    }
     console.log("User is verified", nationality, dateOfBirth, fullname, expiryDate, documentNumber);
   } else {
     console.log("Verification failed");

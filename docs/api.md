@@ -93,7 +93,7 @@ Returns an object containing:
 #### getSolidityVerifierDetails
 
 ```typescript
-getSolidityVerifierDetails(network: SupportedChain): {
+getSolidityVerifierDetails(): {
   address: `0x${string}`
   functionName: string
   abi: {
@@ -105,15 +105,11 @@ getSolidityVerifierDetails(network: SupportedChain): {
 }
 ```
 
-Returns the details of the Solidity verifier for the given network.
-
-Parameters:
-
-- `network`: The network to get the verifier details for (just `ethereum_sepolia` for now)
+Returns the details of the Solidity verifier.
 
 Returns an object containing:
 
-- `address`: The address of the verifier
+- `address`: The address of the verifier (same for all networks)
 - `functionName`: The name of the function to call on the verifier
 - `abi`: The ABI of the verifier
 
@@ -147,15 +143,10 @@ Parameters:
 
 Returns an object containing:
 
-- `vkeyHash`: The hash of the verification key
-- `proof`: The proof to verify
-- `publicInputs`: The public inputs to the proof
+- `version`: The version of the proof
+- `proofVerificationData`: The proof verification data (i.e. vkey hash, proof, public inputs)
 - `committedInputs`: The committed inputs to the proof
-- `committedInputCounts`: The counts of committed inputs to the proof
-- `validityPeriodInDays`: The validity period of the proof in days
-- `scope`: The scope of the request
-- `subscope`: The subscope of the request
-- `devMode`: Whether to use dev mode
+- `serviceConfig`: The service configuration (i.e. validity period, domain, scope, dev mode)
 
 #### getUrl
 
@@ -402,6 +393,8 @@ Called when an individual proof has been generated. Multiple proofs may be gener
 - `vkeyHash`: Hash of the verification key
 - `version`: Version of the circuit used to generate the proof
 - `name`: Name of the circuit used to generate the proof
+- `index`: The index of the proof (starting from 0)
+- `total`: The total number of proofs that should be sent back by the mobile app
 
 ### onResult
 
@@ -470,6 +463,9 @@ interface RequestOptions {
     privateKey: Uint8Array;
     publicKey: Uint8Array;
   };
+  // Advanced configuration: feel free to contact us if you need to use these options
+  cloudProverUrl?: string; // Optional override for the cloud prover URL
+  bridgeUrl?: string; // Optional override for the bridge URL
 }
 ```
 
@@ -481,6 +477,8 @@ interface ProofResult {
   vkeyHash: string; // Hash of the verification key
   version: string; // Version of the proof system
   name: string; // Name of the proof
+  index: number; // Index of the proof (starting from 0)
+  total: number; // Total number of proofs that should be sent back by the mobile app
 }
 ```
 
@@ -526,6 +524,19 @@ interface QueryResult {
     chain?: SupportedChain;
     custom_data?: string;
   };
+  facematch?: {
+    mode?: "regular" | "strict"; // Defaults to "regular"
+  };
+  // Note: as of today, the checks are done against all of the lists,
+  // but in the future, it is planned to support checking against specific lists.
+  sanctions?: {
+    countries?: Alpha2Code[] | "all";
+    lists?: string[] | "all";
+    // Whether the sanctions check should do a check against the last name and first name only
+    // Otherwise, it will do a check against name + date of birth and passport number + country
+    // The strict mode increases the likelihood of a false positive, so use with caution.
+    strict?: boolean; // Defaults to false
+  };
 }
 ```
 
@@ -569,17 +580,25 @@ type IDCredentialValue<T> = T extends "nationality" | "issuing_country"
 ### SolidityVerifierParameters
 
 ```typescript
-interface SolidityVerifierParameters = {
-  vkeyHash: string
-  proof: string
-  publicInputs: string[]
-  committedInputs: string
-  committedInputCounts: number[]
-  validityPeriodInDays: number
-  domain: string
-  scope: string
-  devMode: boolean
-}
+type SolidityProofVerificationData = {
+  vkeyHash: string;
+  proof: string;
+  publicInputs: string[];
+};
+
+type SolidityServiceConfig = {
+  validityPeriodInSeconds: number;
+  domain: string;
+  scope: string;
+  devMode: boolean;
+};
+
+type SolidityVerifierParameters = {
+  version: string;
+  proofVerificationData: SolidityProofVerificationData;
+  committedInputs: string;
+  serviceConfig: SolidityServiceConfig;
+};
 ```
 
 ### Additional Types
@@ -587,8 +606,9 @@ interface SolidityVerifierParameters = {
 ```typescript
 type CountryName = string; // Type for country names
 type Alpha3Code = string; // Type for ISO 3166-1 alpha-3 country codes
+type Alpha2Code = string; // Type for ISO 3166-1 alpha-2 country codes
 type IDCredential = string; // Type for ID credential fields
-type SupportedChain = "ethereum_sepolia"; // Type for supported chains
+type SupportedChain = "ethereum" | "ethereum_sepolia"; // Type for supported chains
 
 // Type for numerical fields that can be compared
 type NumericalIDCredential = "age" | "birthdate" | "expiry_date";
@@ -679,7 +699,7 @@ MERCOSUR_COUNTRIES: string[];
 /**
  * List of countries under international sanctions
  */
-SANCTIONNED_COUNTRIES: string[];
+SANCTIONED_COUNTRIES: string[];
 ```
 
 :::note

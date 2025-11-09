@@ -36,28 +36,28 @@ onResult(({ verified, result }) => {
 });
 ```
 
-## Check sanctionned countries exclusion
+## Check sanctioned countries exclusion
 
-You can check if the user is not from a list of countries. A common use case is to check if the user is not from a list of sanctionned countries.
+You can check if the user is not from a list of countries. A common use case is to check if the user is not from a list of sanctioned countries.
 
 ```typescript
-import { ZKPassport, SANCTIONNED_COUNTRIES } from "@zkpassport/sdk";
+import { ZKPassport, SANCTIONED_COUNTRIES } from "@zkpassport/sdk";
 
 const zkPassport = new ZKPassport("your-domain.com");
 
 const queryBuilder = await zkPassport.request({
   name: "ZKPassport",
   logo: "https://zkpassport.id/logo.png",
-  purpose: "Prove you are not from a list of sanctionned countries",
-  scope: "not-sanctionned-country",
+  purpose: "Prove you are not from a list of sanctioned countries",
+  scope: "not-sanctioned-country",
 });
 
-const { url, onResult } = queryBuilder.out("nationality", SANCTIONNED_COUNTRIES).done();
+const { url, onResult } = queryBuilder.out("nationality", SANCTIONED_COUNTRIES).done();
 
 onResult(({ verified, result }) => {
   if (verified) {
-    const isNotFromSanctionnedCountry = result.nationality.out.result;
-    console.log("User is not from a sanctionned country", isNotFromSanctionnedCountry);
+    const isNotFromSanctionedCountry = result.nationality.out.result;
+    console.log("User is not from a sanctioned country", isNotFromSanctionedCountry);
   } else {
     console.log("Verification failed");
   }

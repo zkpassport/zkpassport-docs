@@ -38,10 +38,6 @@ You can integrate ZKPassport using our SDK. Check out the [Quick Start Guide](/g
 
 Yes, we provide several examples demonstrating different use cases. See our [Examples](/examples) section for implementations of age verification, nationality verification, residency verification, and more. If you want to try it out, you can use our [demo page](https://demo.zkpassport.id).
 
-### How can I integrate ZKPassport with my smart contracts?
-
-For now, we only provide a way to verify proofs on Ethereum Sepolia. You can view our [Sample Contract Integration](https://github.com/zkpassport/circuits/blob/main/src/solidity/src/SampleContract.sol) and look at the [API reference](/api) to see how to do it. We'll add more complete examples to the docs soon.
-
 ### Can I use the proofs in my Noir circuits?
 
 Yes, you can use the proofs in your Noir circuits if you are using Barretenberg as the proving backend by using the [`verify_proof`](https://noir-lang.org/docs/noir/standard_library/recursion#verifying-recursive-proofs) function from the standard library. You would need to use the helper functions from our [internal utils library](https://github.com/zkpassport/zkpassport-utils) to get the necessary information about the proof and its verification key. We'll provide more information on how to do it soon.
