@@ -8,7 +8,21 @@ sidebar_position: 6
 
 This page documents all notable changes to ZKPassport SDK, particularly highlighting any breaking changes that developers should be aware of when upgrading.
 
-## Upcoming release
+## v0.12.2 - Latest release
+
+### Breaking Changes
+
+- None
+
+### New Features
+
+- Expose missing types used by the SDK
+
+### Bug Fixes
+
+- None
+
+## v0.12.1
 
 ### Breaking Changes
 
@@ -20,9 +34,66 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 
 ### Bug Fixes
 
+- Fix issue with FaceMatch verification that would return a zero unique identifier
+
+## v0.12.0
+
+### Breaking Changes
+
+- Switch to new ZKPassportRootVerifier contract for onchain verification. The interface changes slightly.
+
+### New Features
+
+- New ZKPassportRootVerifier with a single deterministic address for all networks. Set the stage for broader deployment of the ZKPassportRootVerifier across multiple chains and better forward compatibility.
+- Relax supported chains to include all the chains with planned support for ZKPassportRootVerifier.
+
+### Bug Fixes
+
 - None
 
-## v0.8.3 - Latest release
+## v0.11.0
+
+### Breaking Changes
+
+- The current date is now linked to the disclosure proofs rather than the integrity proof. This changes the verification logic of the proofs.
+
+### New Features
+
+- Extend sanctions checks to include lists from the UK, EU, and Switzerland in addition to the US OFAC SDN list
+
+### Bug Fixes
+
+- None
+
+## v0.10.0
+
+### Breaking Changes
+
+- Update proving system (to Barretenberg 2.0.3). Proofs generated with previous version of the mobile app will not work with this version of the SDK.
+
+### New Features
+
+- Add support for Private FaceMatch verification on Android
+
+### Bug Fixes
+
+- None
+
+## v0.9.0
+
+### Breaking Changes
+
+- None
+
+### New Features
+
+- Add support for Private FaceMatch verification on iOS
+
+### Bug Fixes
+
+- None
+
+## v0.8.3
 
 ### Breaking Changes
 
