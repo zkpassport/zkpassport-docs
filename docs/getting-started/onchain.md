@@ -8,6 +8,7 @@ ZKPassport allows you to verify passport and national ID proofs directly on EVM 
 
 - Ethereum Mainnet
 - Ethereum Sepolia
+- Base Mainnet
 
 If you need a specific chain, please [reach out to us](mailto:company@zkpassport.id).
 
@@ -23,7 +24,7 @@ Onchain verification enables your smart contracts to:
 
 ## Verifier Contract
 
-ZKPassport maintains a deployed [`ZKPassportVerifier`](https://etherscan.io/address/0x1D000001000EFD9a6371f4d90bB8920D5431c0D8#code) contract on the chains listed above that handles all proof verification. Your contracts will interact with this verifier. Since the verifier address is deterministic, it is the same for all networks.
+ZKPassport maintains a deployed [`ZKPassportVerifier`](https://etherscan.io/address/0x1D000001000EFD9a6371f4d90bB8920D5431c0D8#code) contract at this address `0x1D000001000EFD9a6371f4d90bB8920D5431c0D8` that handles the verification of the proofs on all the chains listed above. Your contracts will interact with this verifier. Since the verifier address is deterministic, it is the same for all networks.
 
 ## Integration Steps
 
