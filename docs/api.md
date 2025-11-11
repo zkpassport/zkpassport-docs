@@ -136,7 +136,7 @@ Returns the parameters needed to call the Solidity verifier.
 Parameters:
 
 - `proof`: The proof to verify
-- `validityPeriodInDays`: The validity period of the proof in days
+- `validityPeriodInDays`: The validity period of the proof in seconds
 - `domain`: The domain of the request
 - `scope`: The scope of the request
 - `devMode`: Whether to use dev mode (use it if you're verifying mock proofs)
