@@ -536,7 +536,7 @@ contract YourContract {
         // Check the proof was generated using your domain name (scope) and the subscope
         // you specified
         require(
-          helper.verifyScopes(params.publicInputs, "your-domain.com", "my-scope"),
+          helper.verifyScopes(params.proofVerificationData.publicInputs, "your-domain.com", "my-scope"),
           "Invalid scope"
         );
 
