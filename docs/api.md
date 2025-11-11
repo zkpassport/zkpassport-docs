@@ -45,7 +45,7 @@ Parameters:
 - `logo`: URL to your application's logo
 - `purpose`: Description of why you're requesting verification
 - `scope` (optional): Scope for the unique identifiers
-- `validity` (optional): Number of days ago the ID should have been last scanned (defaults to 180 days)
+- `validity` (optional): How many seconds ago the proof should have been generated
 - `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode will accept mock proofs generated from the mock passports in the app.
 - `cloudProverUrl` (optional): The url of the cloud prover to use for compressed proofs. Defaults to ZKPassport's Cloud Prover.
 - `bridgeUrl` (optional): The url of the websocket to use to connect to the mobile app. Defaults to ZKPassport's Bridge.
@@ -82,7 +82,7 @@ Parameters:
 - `queryResult`: The query result to verify against
 - `scope` (optional): The scope used when requesting the proof
 - `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode will accept mock proofs generated from the mock passports in the app.
-- `validity` (optional): Number of days ago the ID should have been last scanned (defaults to 180 days)
+- `validity` (optional): How many seconds ago the proof should have been generated
 
 Returns an object containing:
 
@@ -118,13 +118,13 @@ Returns an object containing:
 ```typescript
 getSolidityVerifierParameters({
   proof,
-  validityPeriodInDays,
+  validityPeriodInSeconds,
   domain,
   scope,
   devMode,
 }: {
   proof: ProofResult
-  validityPeriodInDays?: number
+  validityPeriodInSeconds?: number
   domain?: string
   scope?: string
   devMode?: boolean
@@ -136,7 +136,7 @@ Returns the parameters needed to call the Solidity verifier.
 Parameters:
 
 - `proof`: The proof to verify
-- `validityPeriodInDays`: The validity period of the proof in seconds
+- `validityPeriodInSeconds`: The validity period of the proof in seconds
 - `domain`: The domain of the request
 - `scope`: The scope of the request
 - `devMode`: Whether to use dev mode (use it if you're verifying mock proofs)
@@ -454,8 +454,8 @@ interface RequestOptions {
   purpose: string; // Description of why you're requesting verification
   mode?: ProofMode; // Specify the type of proof to request
   scope?: string; // Optional scope for the unique identifier
-  validity?: number; // Optional number of days ago the ID should have been last scanned
-  // (defaults to 180)
+  validity?: number; // (Optional) How many seconds ago the proof should have been generated
+  // (defaults to 7 days in seconds)
   devMode?: boolean; // Optional flag to enable dev mode (defaults to false)
   topicOverride?: string; // Optional override for the request ID
   keyPairOverride?: {
