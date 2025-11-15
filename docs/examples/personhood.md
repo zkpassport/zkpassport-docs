@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # Personhood
 
-Each ID will have its own unique identifier. This identifier doesn't reveal any information about the person nor their ID but is guaranteed to be unique and the same for the same ID. The identifier is scoped to your domain name and also to the scope you specified in the request (if you specified one).
+Each ID will have its own unique identifier. This identifier doesn't reveal any information about the person nor their ID but is guaranteed to be unique and the same for the same ID. The identifier is scoped to your domain name and also to the scope you specified in the request (if you specified one). Learn more about the unique identifier [here](../faq.md#how-is-the-unique-identifier-derived).
 
 Following this logic, you can use this as a base to check the personhood of the user, i.e. if the user is a real person and not a bot. However, there are a few limitations to this:
 

@@ -12,7 +12,7 @@ ZKPassport is a privacy-preserving identity verification solution that allows us
 
 ### How does ZKPassport work?
 
-With the ZKPassport mobile application, you can scan the chip of your passport, ID card, or residence permit using NFC. From this, the application extracts the relevant information, and then generates zero-knowledge proofs that can verify specific claims (like age, nationality, or name) without revealing any other personal data while guaranteeing the authenticity of the identity document. Everything is done locally on the device to ensure complete privacy.
+With the ZKPassport mobile application, you can scan the chip of your passport, ID card, or residence permit using NFC. From this, the application extracts the relevant information, and then generates zero-knowledge proofs that can verify specific claims (like age, nationality, or name) without revealing any other personal data while guaranteeing the authenticity of the identity document. Everything is done locally on the device to ensure complete privacy from both the service and us.
 
 ### What are zero-knowledge proofs?
 
@@ -23,6 +23,12 @@ In the context of ZKPassport, this means users (acting as provers) will prove at
 ### Is my personal data transferred or stored anywhere?
 
 No, ZKPassport is designed with privacy as a core principle. Your personal data is encrypted and processed locally on your device and never leaves it. Only the proofs, along with the information you choose to share, are shared with the web application requesting your information.
+
+### How is the unique identifier derived?
+
+The unique identifier is derived from the ID data (retrieved from the chip). This data is combined with the domain name and the scope the service specified and hashed using Poseidon2. The resulting hash is used as the unique identifier. This ensures the unique identifier is the same for the same ID while differing between different services. And thanks to the one-way property of hash functions, it's not possible to derive the ID data from the unique identifier.
+
+However, it's possible to derive the unique identifier from the ID data if you have complete knowledge of the ID chip data, the domain name and scope. This could include the issuing government (if they keep a record of all the IDs they signed). In order to prevent this, we are currently working on supporting salted unique identifiers, i.e. adding a secret to the derivation process using vOPRFs (Verifiable Oblivious Pseudo-Random Functions).
 
 ### Which identity documents are supported?
 
@@ -84,16 +90,19 @@ Note that the proofs verifying the signatures only need to be generated once aft
 
 Private Facematch in ZKPassport compares your live face to the image stored in the chip of your biometric ID.
 There are five steps to complete this facematch process:
+
 1. Look directly at the camera with a neutral expression.
-2. Slowly rotate your face slightly to the left using your neck (make sure you can still see the phone screen). The app will provide    on-screen instructions to guide you if you need to adjust your direction.
+2. Slowly rotate your face slightly to the left using your neck (make sure you can still see the phone screen). The app will provide on-screen instructions to guide you if you need to adjust your direction.
 3. Repeat the same process while looking up.
 4. Repeat while looking right.
 5. Repeat while looking down.
 
 #### Reasons Why Private Facematch Might Fail
+
 To ensure that the process is performed correctly and on a trusted device, ZKPassport uses Google Play Integrity on Android and the App Attestation Service on Apple devices.
 The ZKPassport mobile app will not generate a Private Facematch Proof if your device is NOT regarded as being highly trustworthy by the services above.
 Possible reasons include:
+
 1. The device is jailbroken or rooted.
 2. The device is running GrapheneOS.
 3. The device’s certificate is listed among the blacklisted certificates maintained by Google:
