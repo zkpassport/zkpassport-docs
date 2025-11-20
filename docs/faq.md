@@ -105,7 +105,6 @@ Possible reasons include:
 
 1. The device is jailbroken or rooted.
 2. The device is running GrapheneOS.
-3. The device’s certificate is listed among the blacklisted certificates maintained by Google:
-4. Android Security Key Attestation Certificate Status.
-5. The manufacturer uses a signature scheme that we do not support.
-6. Solana mobile is currently not compatible with facematch.
+3. The device’s certificate is listed among the blacklisted certificates maintained by Google
+4. The manufacturer uses a signature scheme that we do not support.
+5. The security guarantees provided by the device are not high enough.
