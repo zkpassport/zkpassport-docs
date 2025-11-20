@@ -34,6 +34,37 @@ However, it's possible to derive the unique identifier from the ID data if you h
 
 ZKPassport currently supports most passports, national IDs, and residence permits that comply with ICAO 9303 standards, which includes most modern electronic IDs with NFC capabilities.
 
+### Face Tips and Tricks
+
+Private Facematch in ZKPassport compares your live face to the image stored in the chip of your biometric ID.
+There are five steps to complete this facematch process:
+
+1. Look directly at the camera with a neutral expression.
+2. Slowly rotate your face slightly to the left using your neck (make sure you can still see the phone screen). The app will provide on-screen instructions to guide you if you need to adjust your direction.
+3. Repeat the same process while looking up.
+4. Repeat while looking right.
+5. Repeat while looking down.
+
+#### Reasons Why Private Facematch Might Fail
+
+To ensure that the process is performed correctly and on a trusted device, ZKPassport uses Google Play Integrity on Android and the App Attestation Service on Apple devices.
+The ZKPassport mobile app will not generate a Private Facematch Proof if your device is NOT regarded as being highly trustworthy by the services above.
+Possible reasons include:
+
+1. The device is jailbroken or rooted.
+2. The device is running GrapheneOS.
+3. The device’s certificate is listed among the blacklisted certificates maintained by Google
+4. The manufacturer uses a signature scheme that we do not support.
+5. The security guarantees provided by the device are not high enough.
+
+### Why is the app over 400MB?
+
+The ZKPassport mobile app packages a few things directly in its binary in order to provide fully local verification. This includes:
+
+- A 128MB SRS from Aztec trusted setup to cover ZK proof generation for circuits up to the 2^21 subgroup size
+- A 180MB of ML models to perform Private FaceMatch locally on the device
+- Other artifacts such as images, fonts, videos/animations, and the ZK prover binary
+
 ## Integration Questions
 
 ### How can I integrate ZKPassport into my application?
@@ -85,26 +116,3 @@ As the 3 base proofs are generated right after the ID is scanned and cached for 
 Proof generation is a memory intensive operation. How much RAM is used depends primarly on the signature algorithm used by the ID which can be either RSA or ECDSA. If using RSA, the RAM usage should not go over 1GB (even for RSA 4096 bits with SHA-512) and thus can run on most mobile devices including low-end ones. ECDSA can be more memory intensive, especially for over 500 bits curve such as P521 or Brainpool P512r1 that are often paired with SHA-512, but still then it should not exceed 2GB of RAM, which may get close to the limit of some low-end devices, but will still work on mid-range and high-end ones.
 
 Note that the proofs verifying the signatures only need to be generated once after scanning the ID and are cached for later use. Disclosure proofs have a negligible memory footprint.
-
-### Face Tips and Tricks
-
-Private Facematch in ZKPassport compares your live face to the image stored in the chip of your biometric ID.
-There are five steps to complete this facematch process:
-
-1. Look directly at the camera with a neutral expression.
-2. Slowly rotate your face slightly to the left using your neck (make sure you can still see the phone screen). The app will provide on-screen instructions to guide you if you need to adjust your direction.
-3. Repeat the same process while looking up.
-4. Repeat while looking right.
-5. Repeat while looking down.
-
-#### Reasons Why Private Facematch Might Fail
-
-To ensure that the process is performed correctly and on a trusted device, ZKPassport uses Google Play Integrity on Android and the App Attestation Service on Apple devices.
-The ZKPassport mobile app will not generate a Private Facematch Proof if your device is NOT regarded as being highly trustworthy by the services above.
-Possible reasons include:
-
-1. The device is jailbroken or rooted.
-2. The device is running GrapheneOS.
-3. The device’s certificate is listed among the blacklisted certificates maintained by Google
-4. The manufacturer uses a signature scheme that we do not support.
-5. The security guarantees provided by the device are not high enough.
