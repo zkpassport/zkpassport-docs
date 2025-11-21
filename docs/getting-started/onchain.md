@@ -156,11 +156,11 @@ pragma solidity ^0.8.21;
  */
 struct BoundData {
   // The address of the ID holder
-  senderAddress: address;
+  address senderAddress;
   // The chain id (block.chainid)
-  chainId: uint256;
+  uint256 chainId;
   // The custom data (encoded as ASCII string)
-  customData: string;
+  string customData;
 }
 
 /**
@@ -230,6 +230,18 @@ struct ServiceConfig {
   bool devMode;
 }
 
+enum FaceMatchMode {
+  NONE,
+  REGULAR,
+  STRICT
+}
+
+enum OS {
+  ANY,
+  IOS,
+  ANDROID
+}
+
 /**
  * @notice The public interface for the ZKPassport verifier contract
  */
@@ -237,7 +249,7 @@ interface IZKPassportVerifier {
   /**
    * @notice Verifies a proof from ZKPassport
    * @param params The proof verification parameters
-   * @return isValid True if the proof is valid, false otherwise
+   * @return verified True if the proof is valid, false otherwise
    * @return uniqueIdentifier The unique identifier associated to the identity document that generated the proof
    * @return helper The ZKPassportHelper contract that can be used to verify the information or conditions that are checked by the proof
    */
@@ -267,7 +279,7 @@ interface IZKPassportHelper {
    * @param isIDCard Whether the proof is an ID card
    * @return disclosedData The data disclosed by the proof
    */
-  function getDisclosedData(bytes calldata committedInputs, bool isIDCard) external pure returns (DisclosedData);
+  function getDisclosedData(bytes calldata committedInputs, bool isIDCard) external pure returns (DisclosedData memory);
 
   // ===== Retrieve the bound data =====
 
@@ -276,7 +288,7 @@ interface IZKPassportHelper {
    * @param committedInputs The committed inputs
    * @return boundData The data bound to the proof
    */
-  function getBoundData(bytes calldata committedInputs) external pure returns (BoundData);
+  function getBoundData(bytes calldata committedInputs) external pure returns (BoundData memory);
 
   // ===== Age verification =====
 
@@ -303,7 +315,6 @@ interface IZKPassportHelper {
    * @notice Checks if the age is in the given range
    * @param minAge The age must be greater than or equal to this age
    * @param maxAge The age must be less than or equal to this age
-   * @param params The proof verification parameters
    * @param committedInputs The committed inputs
    * @return True if the age is in the given range, false otherwise
    */
