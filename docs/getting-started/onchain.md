@@ -541,7 +541,7 @@ contract YourContract {
 
     function register(ProofVerificationParams calldata params, bool isIDCard) public returns (bytes32) {
         // Verify the proof
-        (bool verified, bytes32 uniqueIdentifier, IZKPassportHelper helper) = zkPassportVerifier.verifyProof(params);
+        (bool verified, bytes32 uniqueIdentifier, IZKPassportHelper helper) = zkPassportVerifier.verify(params);
         require(verified, "Proof is invalid");
 
         // Check the proof was generated using your domain name (scope) and the subscope
