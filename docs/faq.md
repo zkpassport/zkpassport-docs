@@ -71,7 +71,7 @@ The ZKPassport mobile app packages a few things directly in its binary in order 
 
 If your MRZ (the 2 lines at the bottom of passports or 3 lines at the bottom of ID cards) is not being recognized, ensure you have a clear view of the MRZ on the camera when scanning it. Make sure the **lighting conditions are good** as poorly lit environments can make it harder to read the MRZ. Try to avoid glares on the MRZ that can appear if you shine a light directly on it.
 
-If everything else fails, you can manually enter the MRZ data by clicking on the "Enter Manually" button. There you can enter the document's expiry date, your birthdate and your document number. On ID cards, it is common to have multiple numbers, so make sure to only enter the document number as the others are not relevant for this process. You can tell which of the numbers on the front of the ID is the correct one to enter by looking at the MRZ on the back, it will be the one immediately following your document type and country code (e.g. after IDFRA..., IDD<<..., IDESP...).
+If everything else fails, you can manually enter the MRZ data by clicking on the "Enter Manually" button. There you can enter the document's expiry date, your birthdate and your document number. On ID cards, it is common to have multiple numbers, so make sure to only enter the document number as the others are not relevant for this process. You can tell which of the numbers on the front of the ID is the correct one to enter by looking at the MRZ on the back, it will be the one immediately following your document type and country code (e.g. after `IDFRA...`, `IDD<<...`, `IDESP...`, `C<ITA...`, `I<PRT...`).
 
 ### I can't scan the chip of my passport/ID card. What should I do?
 
