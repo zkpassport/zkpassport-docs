@@ -65,6 +65,32 @@ The ZKPassport mobile app packages a few things directly in its binary in order 
 - A 180MB of ML models to perform Private FaceMatch locally on the device
 - Other artifacts such as images, fonts, videos/animations, and the ZK prover binary
 
+## Troubleshooting
+
+### The MRZ scan is not working. How can I proceed?
+
+If your MRZ (the 2 lines at the bottom of passports or 3 lines at the bottom of ID cards) is not being recognized, ensure you have a clear view of the MRZ on the camera when scanning it. Make sure the **lighting conditions are good** as poorly lit environments can make it harder to read the MRZ. Try to avoid glares on the MRZ that can appear if you shine a light directly on it.
+
+If everything else fails, you can manually enter the MRZ data by clicking on the "Enter Manually" button. There you can enter the document's expiry date, your birthdate and your document number. On ID cards, it is common to have multiple numbers, so make sure to only enter the document number as the others are not relevant for this process. You can tell which of the numbers on the front of the ID is the correct one to enter by looking at the MRZ on the back, it will be the one immediately following your document type and country code (e.g. after IDFRA..., IDD<<..., IDESP...).
+
+### I can't scan the chip of my passport/ID card. What should I do?
+
+If the label on the NFC modal (titled Ready to scan) doesn't change to "Hold still", then it means the chip has not been detected by your phone. Most likely, you need to move your phone around while maintaining **direct physical contact** between your phone and the ID.
+
+Also, note that some passports have a protective shield in their cover and they require to be opened on the photo page to be scanned. Those that don't have such shield can be scanned from the outside directly on the front cover or back cover.
+
+When you see the NFC modal changes to "Hold still", it means the chip has been detected by your phone and you should stop moving your phone immediately until the process is completed, otherwise you may lose the connection to the chip and the scan will fail. Generally, **laying your ID on a flat surface and leaving your phone on it during the process is the best way to ensure a successful scan**.
+
+If the app redirects you to the MRZ page and invites you to enter the MRZ data manually, it means your MRZ was misread and the authentication with the chip failed. You can enter the MRZ data manually as described in the previous question.
+
+If problems persist, notably if the scan starts but seems to fail in the middle of the process, remove the case of your phone and try again.
+
+If you are using an iPhone, and connection to the chip keeps on failing still, a workaround can be to disable temporarily WiFi or even turn on airplane mode to prevent any interference with the NFC communication channel.
+
+### How can I report an issue I'm facing with the app?
+
+You can report issues by submitting a detailed description of the issue and the steps to reproduce it [here](https://zkpassport.featurebase.app/), including what type of ID you have (i.e. passport, ID card, residence permit) and its country of issuance along with the version of the app you are using and your device brand and model. Make sure to not include any sensitive information in your report.
+
 ## Integration Questions
 
 ### How can I integrate ZKPassport into my application?
@@ -78,12 +104,6 @@ Yes, we provide several examples demonstrating different use cases. See our [Exa
 ### Can I use the proofs in my Noir circuits?
 
 Yes, you can use the proofs in your Noir circuits if you are using Barretenberg as the proving backend by using the [`verify_proof`](https://noir-lang.org/docs/noir/standard_library/recursion#verifying-recursive-proofs) function from the standard library. You would need to use the helper functions from our [internal utils library](https://github.com/zkpassport/zkpassport-utils) to get the necessary information about the proof and its verification key. We'll provide more information on how to do it soon.
-
-## Troubleshooting
-
-### My passport/ID card is not being recognized. What should I do?
-
-Ensure that your device has NFC capabilities and that they are enabled. Make sure your passport/ID card is placed correctly on the NFC reader area of your device. If problems persist, check if your document is supported.
 
 ### I'm encountering errors during integration. Where can I get help?
 
