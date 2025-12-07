@@ -87,7 +87,7 @@ const config = {
             label: "Documentation",
           },
           {
-            href: "https://github.com/zkpassport/zkpassport-sdk",
+            href: "https://github.com/zkpassport/zkpassport-packages",
             label: "GitHub",
             position: "right",
           },
@@ -122,7 +122,7 @@ const config = {
             items: [
               {
                 label: "GitHub",
-                href: "https://github.com/zkpassport/zkpassport-sdk",
+                href: "https://github.com/zkpassport/zkpassport-packages",
               },
               {
                 label: "Website",
