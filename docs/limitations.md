@@ -23,6 +23,6 @@ The requirements we set for the supported identity documents are not arbitrary. 
 Private FaceMatch verifies that the user going through the verification process is the same person as the one on the ID. However, its support is more limited than other checks provided by ZKPassport due to a combination of the following reasons:
 
 - The app needs to be executed on a trustable device to perform the face scan. iPhones can provide this with good guarantees. On Android, the app may refuse to perform the face scan on some devices considered untrustworthy.
-- The photo of the ID may not be retrieved or parsed properly, so the face scan cannot be performed. We are currently working on fixing it for the few IDs going through this issue.
+- The user's photo extracted from the ID may not be retrieved or parsed properly, so the face scan cannot be performed. We are currently working on fixing it for the few IDs going through this issue.
 - (Android only) The device relies on unsupported signature algorithms for the attestation phase. We have not yet received any reports of this happening, but we anticipate it may happen on rare occasions.
 - Other edge cases which we will address as they are reported and identified.
