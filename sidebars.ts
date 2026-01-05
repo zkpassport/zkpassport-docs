@@ -61,6 +61,11 @@ const sidebars: SidebarsConfig = {
       label: "Changelog",
       id: "changelog",
     },
+    {
+      type: "doc",
+      label: "Limitations",
+      id: "limitations",
+    },
   ],
 };
 
