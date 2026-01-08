@@ -107,11 +107,11 @@ Yes, you can use the proofs in your Noir circuits if you are using Barretenberg 
 
 ### I'm encountering errors during integration. Where can I get help?
 
-Check our [API Reference](/api) for detailed documentation on all available methods and parameters. If you're still experiencing issues, you can open an issue on our [GitHub repository](https://github.com/zkpassport/zkpassport-sdk).
+Check our [API Reference](/api) for detailed documentation on all available methods and parameters. If you're still experiencing issues, you can open an issue on our [GitHub repository](https://github.com/zkpassport/zkpassport-packages).
 
 ### How can I report a bug or request a feature?
 
-You can report bugs or request features by opening an issue on our [GitHub repository](https://github.com/zkpassport/zkpassport-sdk). We appreciate your feedback and contributions to improve ZKPassport.
+You can report bugs or request features by opening an issue on our [GitHub repository](https://github.com/zkpassport/zkpassport-packages). We appreciate your feedback and contributions to improve ZKPassport.
 
 ## Technical Questions
 
@@ -121,7 +121,7 @@ ZKPassport uses UltraHonk proofs by leveraging the [Barretenberg](https://github
 
 ### Is the code of ZKPassport open source?
 
-Yes, our circuits written in Noir are open source (Apache 2.0 license) and available on [GitHub](https://github.com/zkpassport/circuits). Same for the [SDK](https://github.com/zkpassport/zkpassport-sdk). The mobile app will be open sourced when out of the testing phase and publicly listed on the App Store and Google Play Store.
+Yes, our circuits written in Noir are open source (Apache 2.0 license) and available on [GitHub](https://github.com/zkpassport/circuits). Same for the [SDK](https://github.com/zkpassport/zkpassport-packages/tree/main/packages/zkpassport-sdk). The mobile app will be open sourced when out of the testing phase and publicly listed on the App Store and Google Play Store.
 
 ### How fast is the proof generation?
 
