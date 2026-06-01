@@ -75,6 +75,8 @@ export default function VerifyPage() {
         if (!verified) return;
         console.log("firstname", result.firstname.disclose.result);
         console.log("age over 18", result.age.gte.result);
+        console.log("nationality in EU", result.nationality.in.result);
+        console.log("nationality not from Scandinavia", result.nationality.out.result);
         console.log("unique identifier", uniqueIdentifier);
       }}
     />
@@ -105,6 +107,8 @@ const handle = mount(document.getElementById("zkpassport"), {
     if (!verified) return;
     console.log("firstname", result.firstname.disclose.result);
     console.log("age over 18", result.age.gte.result);
+    console.log("nationality in EU", result.nationality.in.result);
+    console.log("nationality not from Scandinavia", result.nationality.out.result);
     console.log("unique identifier", uniqueIdentifier);
   },
 });
