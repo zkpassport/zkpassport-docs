@@ -126,6 +126,8 @@ mount(document.getElementById("zkpassport"), {
       console.error("Verification failed on the client side");
       return;
     }
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
     const response = await fetch("https://yourapi.com/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -72,7 +72,7 @@ Use two bounds, or the `range` operator (both bounds inclusive). Only the `query
 // gte is greater than or equal to, lte is less than or equal to
 const query = (queryBuilder) => queryBuilder.gte("age", 18).lte("age", 25).done();
 // Alternatively, use the range operator (both bounds inclusive)
-const query = (queryBuilder) => queryBuilder.range("age", 18, 25).done();
+// const query = (queryBuilder) => queryBuilder.range("age", 18, 25).done();
 
 const onResult = ({ verified, result }) => {
   if (verified) {

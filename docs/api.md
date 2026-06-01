@@ -101,7 +101,7 @@ Parameters:
 - `proofs`: The proofs to verify
 - `originalQuery`: The original query object — the `query` returned by `done()` (or the `query` callback in `@zkpassport/ui`). **Required.**
 - `queryResult`: The query result to verify against
-- `validity` (optional): How many seconds ago the proof should have been generated
+- `validity` (optional): How many seconds ago the proof checking the ID's expiry date may have been generated. Defaults to 7 days.
 - `scope` (optional): The scope used when requesting the proof
 - `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode accepts mock proofs generated from the mock passports in the app.
 - `oprfKeyId` (optional): The OPRF key id, if a salted unique identifier was requested
@@ -733,8 +733,17 @@ type Alpha3Code = string; // Type for ISO 3166-1 alpha-3 country codes
 type Alpha2Code = string; // Type for ISO 3166-1 alpha-2 country codes
 type IDCredential = string; // Type for ID credential fields
 
-// Chains supported by the `chain` value of .bind() (non-exhaustive — see the SDK types)
-type SupportedChain = "ethereum" | "base" | "arbitrum" | "optimism" | "polygon" | string;
+// Values accepted by the `chain` argument of .bind() (this is the full type
+// exported by the SDK). Note: on-chain verification is only available where the
+// ZKPassportVerifier is deployed — see Onchain Verification for the current list.
+type SupportedChain =
+  // Mainnets
+  | "ethereum" | "base" | "arbitrum" | "optimism" | "polygon"
+  | "celo" | "gnosis" | "scroll" | "linea" | "world_chain"
+  // Testnets
+  | "ethereum_sepolia" | "base_sepolia" | "arbitrum_sepolia" | "polygon_amoy"
+  | "celo_sepolia" | "gnosis_chiado" | "scroll_sepolia" | "linea_sepolia"
+  | "world_chain_sepolia" | "local";
 
 // The kind of unique identifier (nullifier) tied to the result
 enum NullifierType {

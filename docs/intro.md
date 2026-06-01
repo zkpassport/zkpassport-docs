@@ -29,8 +29,6 @@ ZKPassport enables privacy-preserving identity verification using passports and 
 
 There are two ways to define what you ask users to prove. Both produce the same verification flow and the same results — they differ only in **where the request is defined**.
 
-Both give you full control over what you verify — they differ in where the request lives.
-
 | | **Self-served** | **Dashboard** |
 | --- | --- | --- |
 | **Setup** | None — install the SDK and go | Register your domain at [dashboard.zkpassport.id](https://dashboard.zkpassport.id) |
