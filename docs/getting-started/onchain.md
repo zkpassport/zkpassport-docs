@@ -1,6 +1,9 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 ---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Onchain Verification
 
@@ -30,6 +33,41 @@ ZKPassport maintains a deployed [`ZKPassportVerifier`](https://etherscan.io/addr
 
 ### 1. Build your query for onchain verification
 
+To verify proofs on EVM chains, set `mode` to `"compressed-evm"`. Bind the user's address (and optionally the chain and custom data) so the proof is tied to the on-chain transaction.
+
+<Tabs groupId="framework">
+<TabItem value="react" label="React" default>
+
+```tsx
+import { ZKPassportQRCode } from "@zkpassport/ui/react";
+
+<ZKPassportQRCode
+  name="Your App Name"
+  logo="https://your-domain.com/logo.png"
+  purpose="Doing something"
+  scope="my-scope"
+  // To verify proofs on EVM chains, you need to set the mode to "compressed-evm"
+  mode="compressed-evm"
+  query={(queryBuilder) =>
+    queryBuilder
+      .disclose("nationality")
+      .disclose("document_type")
+      .gte("age", 18)
+      // Bind the user's address to the proof
+      .bind("user_address", "0x1234567890123456789012345678901234567890")
+      // Bind to the chain where the proof will be verified
+      .bind("chain", "ethereum")
+      // Bind custom data to the proof
+      .bind("custom_data", "my-custom-data")
+      .done()
+  }
+  onResult={handleResult}
+/>;
+```
+
+</TabItem>
+<TabItem value="sdk" label="SDK">
+
 ```typescript
 import { ZKPassport } from "@zkpassport/sdk";
 
@@ -38,43 +76,25 @@ const zkPassport = new ZKPassport("your-domain.com");
 // Create a request with your app details
 const queryBuilder = await zkPassport.request({
   name: "Your App Name",
-  // A path to your app's logo
   logo: "https://your-domain.com/logo.png",
-  // A description of the purpose of the request
   purpose: "Doing something",
-  // Optional scope for the user's unique identifier
   scope: "my-scope",
   // To verify proofs on EVM chains, you need to set the mode to "compressed-evm"
   mode: "compressed-evm",
 });
 
-// Build your query with the required attributes or conditions you want to verify
-const {
-  url,
-  requestId,
-  onRequestReceived,
-  onGeneratingProof,
-  onProofGenerated,
-  onResult,
-  onReject,
-  onError,
-} = queryBuilder
-  // Disclose the user's nationality
+const { url, onResult } = queryBuilder
   .disclose("nationality")
-  // Disclose the user's document type
   .disclose("document_type")
-  // Verify the user's age is greater than or equal to 18
   .gte("age", 18)
-  // Bind the user's address to the proof
   .bind("user_address", "0x1234567890123456789012345678901234567890")
-  // Bind to the chain where the proof will be verified
-  // This is strongly typed to the networks we support and plan to support in the near future
   .bind("chain", "ethereum")
-  // Bind custom data to the proof
   .bind("custom_data", "my-custom-data")
-  // Finalize the query
   .done();
 ```
+
+</TabItem>
+</Tabs>
 
 ### 2. Get Verifier Contract Details
 
@@ -94,55 +114,45 @@ const {
 
 ### 3. Generate Verification Parameters from Proof
 
-When a user completes a verification in your app, use `getSolidityVerifierParameters` to prepare the parameters to pass to the verifier contract:
+When a user completes a verification, the `onResult` callback gives you the generated `proofs` and the `sdkInstance` that produced them. Pick the EVM proof (its `name` starts with `outer_evm`) and pass it to `getSolidityVerifierParameters` to prepare the parameters for the verifier contract.
 
 ```typescript
-let proof: ProofResult;
-// Use the proofResult from the onProofGenerated callback to get the proof
-onProofGenerated((proofResult: ProofResult) => {
-  proof = proofResult;
-});
-
-onResult(
-  ({
-    uniqueIdentifier,
-    verified,
-    result,
-  }: {
-    uniqueIdentifier: string;
-    verified: boolean;
-    result: QueryResult;
-  }) => {
-    if (!verified) {
-      // If the proof is not verified, save yourself some gas and return straight away
-      console.log("Proof is not verified");
-      return;
-    }
-
-    // Get the verification parameters
-    const verifierParams = zkPassport.getSolidityVerifierParameters({
-      proof: proof,
-      // Use the same scope as the one you specified with the request function
-      scope: "my-scope",
-      // Enable dev mode if you want to use mock passports, otherwise keep it false
-      devMode: false,
-    });
-
-    // Get the wallet provider
-    const walletProvider = await getWalletProvider();
-
-    // Verify the proof on-chain
-    // The function is defined in the next steps below
-    await verifyOnChain(
-      verifierParams,
-      walletProvider,
-      // Use the document type to determine if the proof is for an ID card or passport
-      // Residence permit are essentially like ID cards as they follow the same structure
-      result.document_type.disclose.result !== "passport"
-    );
+async function handleResult({ uniqueIdentifier, verified, result, proofs, sdkInstance }) {
+  if (!verified) {
+    // If the proof is not verified, save yourself some gas and return straight away
+    console.log("Proof is not verified");
+    return;
   }
-);
+
+  // In compressed-evm mode, the proof to submit on-chain is the one named "outer_evm..."
+  const evmProof = proofs.find((p) => p.name?.startsWith("outer_evm"));
+
+  // Get the verification parameters
+  const verifierParams = sdkInstance.getSolidityVerifierParameters({
+    proof: evmProof,
+    // Use the same scope as the one you specified on the request
+    scope: "my-scope",
+    // Enable dev mode if you want to use mock passports, otherwise keep it false
+    devMode: false,
+  });
+
+  // Get the wallet provider
+  const walletProvider = await getWalletProvider();
+
+  // Verify the proof on-chain (the function is defined in the steps below)
+  await verifyOnChain(
+    verifierParams,
+    walletProvider,
+    // Use the document type to determine if the proof is for an ID card or passport
+    // Residence permits are essentially like ID cards as they follow the same structure
+    result.document_type.disclose.result !== "passport"
+  );
+}
 ```
+
+:::note
+`getSolidityVerifierParameters` takes a single `ProofResult` — the `outer_evm` proof above. If you're using the SDK directly instead of the card, you can call `zkPassport.getSolidityVerifierParameters(...)` on your own instance rather than `sdkInstance`.
+:::
 
 ### 4. Create Your Smart Contract
 
@@ -597,23 +607,12 @@ contract YourContract {
 Connect your frontend to the smart contract using the SDK:
 
 ```typescript
-import { ZKPassport } from "@zkpassport/sdk";
 import { createWalletClient, createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 import { custom } from "viem/wallet";
 
-async function verifyOnChain(proofResult, walletProvider, isIDCard) {
-  const zkPassport = new ZKPassport("your-domain.com");
-
-  // Get verification parameters
-  const verifierParams = zkPassport.getSolidityVerifierParameters({
-    proof: proofResult,
-    // Use the same scope as the one you specified with the request function
-    scope: "my-scope",
-    // Enable dev mode if you want to use mock passports, otherwise keep it false
-    devMode: false,
-  });
-
+// `verifierParams` are the parameters returned by getSolidityVerifierParameters in step 3
+async function verifyOnChain(verifierParams, walletProvider, isIDCard) {
   // Create wallet client
   const walletClient = createWalletClient({
     chain: mainnet,

@@ -2,57 +2,93 @@
 sidebar_position: 5
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Personhood
 
-Each ID will have its own unique identifier. This identifier doesn't reveal any information about the person nor their ID but is guaranteed to be unique and the same for the same ID. The identifier is scoped to your domain name and also to the scope you specified in the request (if you specified one). Learn more about the unique identifier [here](../faq.md#how-is-the-unique-identifier-derived).
+Each ID has its own unique identifier. This identifier doesn't reveal any information about the person nor their ID but is guaranteed to be unique and the same for the same ID. The identifier is scoped to your domain name and also to the scope you specified in the request (if you specified one). Learn more about the unique identifier [here](../faq.md#how-is-the-unique-identifier-derived).
 
 Following this logic, you can use this as a base to check the personhood of the user, i.e. if the user is a real person and not a bot. However, there are a few limitations to this:
 
 - A person can have multiple IDs, so if you want to have `one person <-> one account` for example, it won't be exactly that but more `one ID <-> one account`.
-- If you want to have a truly robust proof of personhood, you should use [FaceMatch](./facematch.md) in your query. And for greater protection against spoofing, you should use the `strict` mode.
+- If you want a truly robust proof of personhood, you should use [FaceMatch](./facematch.md) in your query. And for greater protection against spoofing, you should use the `strict` mode.
 
 ## Check uniqueness
 
-To have a proof of unique ID, you can simply initiate a request with no information disclosure and get back the identifier.
+To have a proof of unique ID, simply initiate a request with no information disclosure and get back the identifier.
 
-```typescript
-import { ZKPassport } from "@zkpassport/sdk";
+<Tabs groupId="framework">
+<TabItem value="react" label="React" default>
 
-const zkPassport = new ZKPassport("your-domain.com");
+```tsx
+import { ZKPassportQRCode } from "@zkpassport/ui/react";
 
-const queryBuilder = await zkPassport.request({
-  name: "ZKPassport",
-  logo: "https://zkpassport.id/logo.png",
-  purpose: "Prove your personhood",
-  scope: "personhood",
-});
-
-const { url, onResult } = queryBuilder.done();
-
-onResult(async ({ verified, uniqueIdentifier }) => {
-  if (verified) {
+<ZKPassportQRCode
+  name="ZKPassport"
+  logo="https://zkpassport.id/logo.png"
+  purpose="Prove your personhood"
+  scope="personhood"
+  query={(queryBuilder) => queryBuilder.done()}
+  onResult={async ({ verified, uniqueIdentifier }) => {
+    if (!verified) {
+      console.log("Verification failed");
+      return;
+    }
     console.log("Unique identifier", uniqueIdentifier);
-    // For example, you can set up an endpoint to check if the user is registered under
-    // this unique identifier in your database
-    const response = await fetch(`/sampe/api/registered/${uniqueIdentifier}`);
+    // For example, check if the user is already registered under this identifier
+    const response = await fetch(`/api/registered/${uniqueIdentifier}`);
     const { registered } = await response.json();
     if (registered) {
       console.log("User is already registered");
     } else {
-      console.log("User is not registered");
-      // If not already registered, you can register the user
-      // with the newly received unique identifier
-      const response = await fetch(`/sampe/api/register`, {
+      // If not registered yet, register the user with the new identifier
+      await fetch(`/api/register`, {
         method: "POST",
-        body: JSON.stringify({
-          uniqueIdentifier,
-        }),
+        body: JSON.stringify({ uniqueIdentifier }),
       });
-      const { registered } = await response.json();
-      console.log("User is registered", registered);
+      console.log("User registered");
     }
-  } else {
-    console.log("Verification failed");
-  }
+  }}
+/>;
+```
+
+</TabItem>
+<TabItem value="vanilla" label="Vanilla JS">
+
+```ts
+import { mount } from "@zkpassport/ui";
+
+mount(document.getElementById("zkpassport"), {
+  name: "ZKPassport",
+  logo: "https://zkpassport.id/logo.png",
+  purpose: "Prove your personhood",
+  scope: "personhood",
+  query: (queryBuilder) => queryBuilder.done(),
+  onResult: async ({ verified, uniqueIdentifier }) => {
+    if (!verified) {
+      console.log("Verification failed");
+      return;
+    }
+    console.log("Unique identifier", uniqueIdentifier);
+    const response = await fetch(`/api/registered/${uniqueIdentifier}`);
+    const { registered } = await response.json();
+    if (registered) {
+      console.log("User is already registered");
+    } else {
+      await fetch(`/api/register`, {
+        method: "POST",
+        body: JSON.stringify({ uniqueIdentifier }),
+      });
+      console.log("User registered");
+    }
+  },
 });
 ```
+
+</TabItem>
+</Tabs>
+
+:::tip
+This example trusts the client-side result. For anything security-sensitive, verify the proofs on your server before registering the user — see the [Client-Server](./client-server.md) example.
+:::
