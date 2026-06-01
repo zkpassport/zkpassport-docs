@@ -21,6 +21,7 @@ const sidebars: SidebarsConfig = {
       items: [
         "getting-started/quick-start",
         "getting-started/basic-usage",
+        "getting-started/policies",
         "getting-started/dev-mode",
         "getting-started/onchain",
       ],

@@ -8,7 +8,20 @@ sidebar_position: 6
 
 This page documents all notable changes to ZKPassport SDK, particularly highlighting any breaking changes that developers should be aware of when upgrading.
 
-## v0.12.2 - Latest release
+## v0.15.x - Latest release
+
+### Breaking Changes
+
+- `verify()` now requires the original query object. Pass it as `originalQuery` (the `query` returned by `done()`, or captured from the `@zkpassport/ui` `query` callback) in addition to `queryResult`. See the [Client-Server example](./examples/client-server).
+
+### New Features
+
+- **Dashboard & policies** — manage your branding and verification request from the [ZKPassport Dashboard](https://dashboard.zkpassport.id) and apply it in code with `.policy("pol_xyz")`. See [Dashboard & Policies](./getting-started/policies).
+- **`@zkpassport/ui`** — a drop-in QR verification card for React (`ZKPassportQRCode`) and vanilla JS (`mount`). See the [Quick Start](./getting-started/quick-start).
+- `onResult` now also provides the raw `proofs`, the `sdkInstance`, and the `uniqueIdentifierType`.
+- New `request()` options: `projectID`, `uniqueIdentifierType`, and `oprfKeyId` (salted unique identifiers, which require `.facematch("strict")`).
+
+## v0.12.2
 
 ### Breaking Changes
 

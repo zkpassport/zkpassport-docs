@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Examples
 
-If you are not entirely sure what you can do with the SDK, you can check some of the following examples:
+If you are not entirely sure what you can do with the SDK, you can check some of the following examples. They use the drop-in [`@zkpassport/ui`](../getting-started/quick-start) card (React and vanilla JS) — what differs between examples is the **query** you build.
 
 - [Age Verification](./age-verification.md) - Learn how to verify a user's age using their ID data
 - [Nationality](./nationality.md) - See how to verify a user's nationality

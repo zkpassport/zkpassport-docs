@@ -6,6 +6,8 @@ sidebar_position: 4
 
 This section provides detailed documentation for the ZKPassport SDK's public API, including classes, methods, types, and constants.
 
+For the drop-in QR verification card, see the [`@zkpassport/ui`](#zkpassportui-the-qr-card) section at the bottom of this page.
+
 ## ZKPassport Class
 
 The main class for interacting with the ZKPassport SDK.
@@ -26,29 +28,42 @@ Creates a new instance of the ZKPassport SDK.
 
 ```typescript
 async request(options: {
-  name: string;
-  logo: string;
-  purpose: string;
+  name?: string;
+  logo?: string;
+  purpose?: string;
   scope?: string;
+  mode?: ProofMode;
+  projectID?: string;
   validity?: number;
   devMode?: boolean;
+  uniqueIdentifierType?: NullifierType.NON_SALTED | NullifierType.SALTED;
+  oprfKeyId?: string;
+  topicOverride?: string;
+  keyPairOverride?: { privateKey: Uint8Array; publicKey: Uint8Array };
   cloudProverUrl?: string;
   bridgeUrl?: string;
 }): Promise<QueryBuilder>
 ```
 
-Initiates a new verification request.
+Initiates a new verification request and returns a `QueryBuilder`.
 
 Parameters:
 
-- `name`: Your application name
-- `logo`: URL to your application's logo
-- `purpose`: Description of why you're requesting verification
-- `scope` (optional): Scope for the unique identifiers
-- `validity` (optional): How many seconds ago the proof should have been generated
-- `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode will accept mock proofs generated from the mock passports in the app.
-- `cloudProverUrl` (optional): The url of the cloud prover to use for compressed proofs. Defaults to ZKPassport's Cloud Prover.
-- `bridgeUrl` (optional): The url of the websocket to use to connect to the mobile app. Defaults to ZKPassport's Bridge.
+- `name` (optional): Your application name. Defaults to your dashboard project branding, then your domain.
+- `logo` (optional): URL to your application's logo. Defaults to your dashboard project branding.
+- `purpose` (optional): Description of why you're requesting verification. Defaults to the policy's purpose (if a policy is applied), then a generic message.
+- `scope` (optional): Scope for the unique identifier. Defaults to your domain. When you apply a policy with [`.policy()`](#policy), the scope is locked to `<policy-id>:<version>`.
+- `mode` (optional): The proof mode — `"fast"` (default), `"compressed"`, or `"compressed-evm"` (required for [onchain verification](./getting-started/onchain)).
+- `projectID` (optional): The project ID of your service.
+- `validity` (optional): How many seconds ago the proof checking the ID's expiry date may have been generated. Defaults to 7 days.
+- `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode accepts mock proofs generated from the mock passports in the app.
+- `uniqueIdentifierType` (optional): `NullifierType.NON_SALTED` (default) or `NullifierType.SALTED`. A salted identifier requires `.facematch("strict")` in the query.
+- `oprfKeyId` (optional): OPRF key identifier; implies a salted unique identifier.
+- `topicOverride`, `keyPairOverride`, `cloudProverUrl`, `bridgeUrl` (optional): Advanced configuration. `cloudProverUrl` overrides the cloud prover for compressed proofs and `bridgeUrl` overrides the websocket bridge to the mobile app. Contact us if you need these.
+
+:::tip
+To apply a policy defined in the [dashboard](./getting-started/policies), chain `.policy("pol_xyz")` on the returned `QueryBuilder` instead of building the query with the other methods. Most of the options above (name, logo, purpose, scope) then default to your dashboard configuration.
+:::
 
 Returns a `QueryBuilder` instance for building the verification query.
 
@@ -57,36 +72,44 @@ Returns a `QueryBuilder` instance for building the verification query.
 ```typescript
 async verify({
   proofs,
+  originalQuery,
   queryResult,
+  validity,
   scope,
   devMode,
-  validity,
+  oprfKeyId,
 }: {
   proofs: Array<ProofResult>;
+  originalQuery: Query;
   queryResult: QueryResult;
+  validity?: number;
   scope?: string;
   devMode?: boolean;
-  validity?: number;
+  oprfKeyId?: string;
 }): Promise<{
   uniqueIdentifier: string | undefined;
+  uniqueIdentifierType: NullifierType | undefined;
   verified: boolean;
   queryResultErrors?: QueryResultErrors;
 }>
 ```
 
-Verifies the proofs received from the mobile app. You can store the proofs and query result and use this method to verify them later, for example server-side after running the SDK logic client-side.
+Verifies the proofs received from the mobile app. You can store the proofs, the original query, and the query result and use this method to verify them later, for example server-side after running the SDK logic client-side (see the [Client-Server example](./examples/client-server)).
 
 Parameters:
 
 - `proofs`: The proofs to verify
+- `originalQuery`: The original query object — the `query` returned by `done()` (or the `query` callback in `@zkpassport/ui`). **Required.**
 - `queryResult`: The query result to verify against
-- `scope` (optional): The scope used when requesting the proof
-- `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode will accept mock proofs generated from the mock passports in the app.
 - `validity` (optional): How many seconds ago the proof should have been generated
+- `scope` (optional): The scope used when requesting the proof
+- `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode accepts mock proofs generated from the mock passports in the app.
+- `oprfKeyId` (optional): The OPRF key id, if a salted unique identifier was requested
 
 Returns an object containing:
 
 - `uniqueIdentifier`: The unique identifier associated with the user
+- `uniqueIdentifierType`: The type of unique identifier (see [`NullifierType`](#additional-types))
 - `verified`: Whether the proofs were successfully verified
 - `queryResultErrors`: Detailed error information if verification fails (undefined if verification succeeds)
 
@@ -228,6 +251,14 @@ Currently supported for:
 - `birthdate`: Check if the birthdate is after a specific date
 - `expiry_date`: Check if the ID expires after a specific date
 
+#### gt (Greater Than)
+
+```typescript
+gt<T extends NumericalIDCredential>(key: T, value: IDCredentialValue<T>): QueryBuilder
+```
+
+Verifies if a numeric field is strictly greater than a value. Supported for the same fields as `gte`.
+
 #### lt (Less Than)
 
 ```typescript
@@ -332,24 +363,71 @@ Currently supported:
 - `chain`: The chain where the proof will be verified. This is converted to the appropriate chain id.
 - `custom_data`: Custom data to be attached to the proof. This is treated as ASCII encoded text.
 
+#### sanctions
+
+```typescript
+sanctions(
+  countries?: SanctionsCountries,
+  lists?: SanctionsLists,
+  options?: { strict?: boolean }
+): QueryBuilder
+```
+
+Requires that the ID holder is not part of any of the specified sanction lists. See the [KYC example](./examples/kyc).
+
+- `countries` (optional): The country or list of countries whose sanction lists to check against. Defaults to `"all"`.
+- `lists` (optional): The specific lists to check against. Defaults to `"all"`.
+- `options.strict` (optional): When `true`, the check is done against the last name and first name only, which has a higher false-positive rate but is harder to evade. When `false` (default), matches need to include the date of birth and name, or the passport number and nationality.
+
+:::note
+As of today, checks run against all of the available lists (US, UK, EU, Switzerland), so `countries` and `lists` accept `"all"`. Support for specific lists is planned.
+:::
+
+#### facematch
+
+```typescript
+facematch(mode?: FacematchMode): QueryBuilder
+```
+
+Requires that the ID holder's face matches the photo on the ID, verified locally on the device. See the [Private FaceMatch example](./examples/facematch).
+
+- `mode` (optional): `"regular"` (default) runs a basic liveness check and is faster; `"strict"` runs an extensive liveness check for higher-security flows such as KYC.
+
+#### policy
+
+```typescript
+policy(id: string): QueryBuilder
+```
+
+Applies an immutable [policy](./getting-started/policies) fetched from the [dashboard](https://dashboard.zkpassport.id). The policy's query is applied, its scope is locked to `<id>:<version>`, and branding/purpose default to the dashboard configuration.
+
+- `id`: The policy id (e.g. `"pol_xyz"`).
+
+Constraints (throws otherwise): `.policy()` must be called on its own (it cannot be combined with builder methods like `.gte()` / `.disclose()`) and only once per request.
+
 #### done
 
 ```typescript
 done(): {
   url: string;
+  query: Query;
   requestId: string;
+  policy?: string;
   onRequestReceived: (callback: () => void) => void;
   onGeneratingProof: (callback: () => void) => void;
+  onBridgeConnect: (callback: () => void) => void;
   onProofGenerated: (callback: (result: ProofResult) => void) => void;
   onResult: (callback: (response: {
     uniqueIdentifier: string | undefined;
+    uniqueIdentifierType: NullifierType | undefined;
     verified: boolean;
     result: QueryResult;
     queryResultErrors?: QueryResultErrors;
+    proofs: ProofResult[];
+    sdkInstance: ZKPassport;
   }) => void) => void;
   onReject: (callback: () => void) => void;
   onError: (callback: (error: string) => void) => void;
-  onBridgeConnect: (callback: () => void) => void;
   isBridgeConnected: () => boolean;
   requestReceived: () => boolean;
 }
@@ -358,7 +436,9 @@ done(): {
 Finalizes the query and returns an object containing:
 
 - `url`: URL to redirect users to the ZKPassport app
+- `query`: The original query object — pass this to [`verify()`](#verify) as `originalQuery` for server-side verification
 - `requestId`: Unique identifier for this request
+- `policy`: The policy id used to build the request, if one was applied with [`.policy()`](#policy)
 - Event handlers (see Event Handlers section below)
 
 ## Event Handlers
@@ -401,18 +481,24 @@ Called when an individual proof has been generated. Multiple proofs may be gener
 ```typescript
 onResult(callback: (response: {
   uniqueIdentifier: string | undefined;
+  uniqueIdentifierType: NullifierType | undefined;
   verified: boolean;
   result: QueryResult;
   queryResultErrors?: QueryResultErrors;
+  proofs: ProofResult[];
+  sdkInstance: ZKPassport;
 }) => void): void
 ```
 
 Called when all proofs have been generated and verified. This is the main callback you'll use to handle the verification results. The callback receives a response object containing:
 
 - `uniqueIdentifier`: A unique identifier for the user's ID (undefined if verification failed)
+- `uniqueIdentifierType`: The type of unique identifier (see [`NullifierType`](#additional-types))
 - `verified`: Whether all proofs were successfully verified
 - `result`: The result of the verification
 - `queryResultErrors`: Detailed error information if verification fails (undefined if verification succeeds)
+- `proofs`: The raw proofs — pass them (with the original `query` and `result`) to [`verify()`](#verify) to re-verify server-side
+- `sdkInstance`: The `ZKPassport` instance that produced this result (handy for calling e.g. `getSolidityVerifierParameters` from a `@zkpassport/ui` callback)
 
 :::warning
 If `verified` is `false`, you should not trust any of the results and `uniqueIdentifier` will be undefined.
@@ -449,14 +535,18 @@ Called if an error occurs during the verification process.
 type ProofMode = "fast" | "compressed" | "compressed-evm";
 
 interface RequestOptions {
-  name: string; // Your application name
-  logo: string; // URL to your application's logo
-  purpose: string; // Description of why you're requesting verification
-  mode?: ProofMode; // Specify the type of proof to request
-  scope?: string; // Optional scope for the unique identifier
+  name?: string; // Your application name (defaults to dashboard branding, then domain)
+  logo?: string; // URL to your application's logo (defaults to dashboard branding)
+  purpose?: string; // Why you're requesting verification (defaults to the policy's purpose, then generic)
+  scope?: string; // Optional scope for the unique identifier (defaults to your domain)
+  mode?: ProofMode; // Specify the type of proof to request (defaults to "fast")
+  projectID?: string; // The project ID of your service
   validity?: number; // (Optional) How many seconds ago the proof should have been generated
   // (defaults to 7 days in seconds)
   devMode?: boolean; // Optional flag to enable dev mode (defaults to false)
+  // Opt into a salted unique identifier (requires .facematch("strict"))
+  uniqueIdentifierType?: NullifierType.NON_SALTED | NullifierType.SALTED;
+  oprfKeyId?: string; // OPRF key identifier; implies a salted unique identifier
   topicOverride?: string; // Optional override for the request ID
   keyPairOverride?: {
     // Optional override for the ECDH key pair
@@ -494,6 +584,10 @@ interface QueryResult {
       result: boolean;
       expected: number | Date; // Expected value for greater-than-or-equal query
     };
+    gt?: {
+      result: boolean;
+      expected: number | Date; // Expected value for greater-than query
+    };
     lt?: {
       result: boolean;
       expected: number; // Expected value for less-than query
@@ -524,18 +618,17 @@ interface QueryResult {
     chain?: SupportedChain;
     custom_data?: string;
   };
+  // Present when .facematch() was requested
   facematch?: {
-    mode?: "regular" | "strict"; // Defaults to "regular"
+    mode: "regular" | "strict";
+    passed: boolean; // Whether the FaceMatch check passed
   };
-  // Note: as of today, the checks are done against all of the lists,
-  // but in the future, it is planned to support checking against specific lists.
+  // Present when .sanctions() was requested
   sanctions?: {
-    countries?: Alpha2Code[] | "all";
-    lists?: string[] | "all";
-    // Whether the sanctions check should do a check against the last name and first name only
-    // Otherwise, it will do a check against name + date of birth and passport number + country
-    // The strict mode increases the likelihood of a false positive, so use with caution.
-    strict?: boolean; // Defaults to false
+    passed: boolean; // Whether all sanction checks passed
+    isStrict: boolean; // Whether the check ran in strict mode
+    countries?: Record<string, { passed: boolean }>;
+    lists?: Record<string, { passed: boolean }>;
   };
 }
 ```
@@ -545,7 +638,9 @@ interface QueryResult {
 ```typescript
 interface QueryBuilderResult {
   url: string; // URL to redirect users to the ZKPassport app
+  query: Query; // The original query object (pass to verify() as originalQuery)
   requestId: string; // Unique identifier for this request
+  policy?: string; // The policy id, if .policy() was applied
   onRequestReceived: (callback: () => void) => void; // Called when request is received
   onGeneratingProof: (callback: () => void) => void; // Called when proof generation starts
   onBridgeConnect: (callback: () => void) => void; // Called when bridge connects
@@ -554,8 +649,12 @@ interface QueryBuilderResult {
     callback: (response: {
       // Called with final results
       uniqueIdentifier: string | undefined;
+      uniqueIdentifierType: NullifierType | undefined;
       verified: boolean;
       result: QueryResult;
+      queryResultErrors?: QueryResultErrors;
+      proofs: ProofResult[];
+      sdkInstance: ZKPassport;
     }) => void
   ) => void;
   onReject: (callback: () => void) => void; // Called if user rejects
@@ -564,6 +663,31 @@ interface QueryBuilderResult {
   requestReceived: () => boolean; // Check if request was received
 }
 ```
+
+### Policy
+
+```typescript
+type Policy = {
+  id: string; // e.g. "pol_xyz"
+  version: number; // Positive integer
+  name: string;
+  purpose: string; // Default purpose shown to the user
+  projectId: string | null;
+  query: Query; // The immutable query the policy applies
+};
+
+type DashboardConfig = {
+  project: {
+    name: string;
+    domain: string;
+    logoUrl: string | null;
+    allowedOrigins: string[];
+  };
+  policies: Policy[];
+};
+```
+
+Policies are managed in the [ZKPassport Dashboard](https://dashboard.zkpassport.id) and applied with [`.policy(id)`](#policy). See [Dashboard & Policies](./getting-started/policies).
 
 ### IDCredentialValue
 
@@ -608,7 +732,17 @@ type CountryName = string; // Type for country names
 type Alpha3Code = string; // Type for ISO 3166-1 alpha-3 country codes
 type Alpha2Code = string; // Type for ISO 3166-1 alpha-2 country codes
 type IDCredential = string; // Type for ID credential fields
-type SupportedChain = "ethereum" | "ethereum_sepolia"; // Type for supported chains
+
+// Chains supported by the `chain` value of .bind() (non-exhaustive — see the SDK types)
+type SupportedChain = "ethereum" | "base" | "arbitrum" | "optimism" | "polygon" | string;
+
+// The kind of unique identifier (nullifier) tied to the result
+enum NullifierType {
+  NON_SALTED = 0,
+  SALTED = 1,
+  NON_SALTED_MOCK = 2,
+  SALTED_MOCK = 3,
+}
 
 // Type for numerical fields that can be compared
 type NumericalIDCredential = "age" | "birthdate" | "expiry_date";
@@ -705,3 +839,78 @@ SANCTIONED_COUNTRIES: string[];
 :::note
 The expected format for countries are alpha-3 country codes. However, the SDK automatically handles conversion between country names and codes when using the `in` and `out` methods.
 :::
+
+## @zkpassport/ui (the QR card)
+
+[`@zkpassport/ui`](https://www.npmjs.com/package/@zkpassport/ui) is the drop-in verification card built on top of the SDK. It renders the QR code, manages the bridge/scan/generate lifecycle, and exposes the SDK callbacks. Install it alongside the SDK:
+
+```bash
+npm install @zkpassport/sdk @zkpassport/ui
+```
+
+### React — `ZKPassportQRCode`
+
+```typescript
+import { ZKPassportQRCode } from "@zkpassport/ui/react";
+
+function ZKPassportQRCode(props: ZKPassportQRCodeOptions): ReactElement
+```
+
+In the Next.js App Router, the React entry is marked `"use client"`, so import it from a client component.
+
+### Vanilla — `mount`
+
+```typescript
+import { mount } from "@zkpassport/ui";
+
+function mount(element: HTMLElement, options: ZKPassportQRCodeOptions): QRCardHandle
+
+type QRCardHandle = {
+  update(next: ZKPassportQRCodeOptions): void; // swap options
+  retry(): void; // rebuild the request
+  unmount(): void; // tear it all down
+};
+```
+
+### Options
+
+```typescript
+type ZKPassportQRCodeOptions = {
+  // Every request() option is accepted as a prop/option:
+  // name, logo, purpose, scope, mode, devMode, validity, uniqueIdentifierType, oprfKeyId
+  // (the internal projectID / bridge-plumbing options are excluded)
+
+  domain?: string; // Passed to new ZKPassport(...). Defaults to window.location.hostname
+  theme?: "light" | "dark" | "auto"; // Card theme
+
+  // Required: receives the SDK's QueryBuilder, applies gates, returns queryBuilder.done()
+  query: (queryBuilder: QueryBuilder) => QueryBuilderResult;
+
+  // UI callbacks
+  onReady?: () => void; // QR is scannable (fires once per request)
+  onRetryClicked?: () => void; // User clicked the retry button after an error
+
+  // SDK lifecycle callbacks (same signatures as the SDK)
+  onBridgeConnect?: () => void;
+  onRequestReceived?: () => void;
+  onGeneratingProof?: () => void;
+  onProofGenerated?: (proof: ProofResult) => void;
+  onResult?: (response: {
+    uniqueIdentifier: string | undefined;
+    uniqueIdentifierType: NullifierType | undefined;
+    verified: boolean;
+    result: QueryResult;
+    queryResultErrors?: QueryResultErrors;
+    proofs: ProofResult[];
+    sdkInstance: ZKPassport;
+  }) => void;
+  onReject?: () => void;
+  onError?: (message: string) => void;
+};
+```
+
+:::note
+Styles are auto-injected as a `<style>` tag wrapped in `@layer zkpassport`, so your app styles always win. For CSP-strict environments you can opt out of inline styles by importing the standalone bundle: `import "@zkpassport/ui/styles.css"`.
+:::
+
+To apply a dashboard policy through the card, return `queryBuilder.policy("pol_xyz").done()` from the `query` callback. See [Dashboard & Policies](./getting-started/policies).

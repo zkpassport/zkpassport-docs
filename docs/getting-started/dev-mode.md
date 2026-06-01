@@ -1,6 +1,9 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 ---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Dev Mode
 
@@ -24,22 +27,66 @@ Once you confirm, 6 mock passports (with different data and configurations) will
 
 ## Enable Dev Mode in the SDK
 
-To enable dev mode in the SDK, you need to set the `devMode` parameter to `true` when building up your query with the `request` function. Without this, proofs from mock passports will be considered as invalid by the SDK.
+To enable dev mode, set `devMode` to `true`. Without it, proofs from mock passports are considered invalid. It's available both as a prop on the `@zkpassport/ui` card and as an option on `request()` when using the SDK directly.
+
+<Tabs groupId="framework">
+<TabItem value="react" label="React" default>
+
+```tsx
+import { ZKPassportQRCode } from "@zkpassport/ui/react";
+
+<ZKPassportQRCode
+  name="Your App Name"
+  logo="https://your-domain.com/logo.png"
+  purpose="Your Purpose"
+  scope="your-scope"
+  // Enable dev mode here
+  devMode
+  query={(queryBuilder) => queryBuilder.gte("age", 18).done()}
+  onResult={({ verified, uniqueIdentifier }) => {
+    // For mock passports, the unique identifier is always 1
+    if (verified) console.log("Unique identifier", uniqueIdentifier);
+  }}
+/>;
+```
+
+</TabItem>
+<TabItem value="vanilla" label="Vanilla JS">
+
+```ts
+import { mount } from "@zkpassport/ui";
+
+mount(document.getElementById("zkpassport"), {
+  name: "Your App Name",
+  logo: "https://your-domain.com/logo.png",
+  purpose: "Your Purpose",
+  scope: "your-scope",
+  // Enable dev mode here
+  devMode: true,
+  query: (queryBuilder) => queryBuilder.gte("age", 18).done(),
+  onResult: ({ verified, uniqueIdentifier }) => {
+    if (verified) console.log("Unique identifier", uniqueIdentifier);
+  },
+});
+```
+
+</TabItem>
+<TabItem value="sdk" label="SDK">
 
 ```typescript
 import { ZKPassport } from "@zkpassport/sdk";
 
 const zkPassport = new ZKPassport("your-domain.com");
 
-const request = await zkPassport.request({
+const queryBuilder = await zkPassport.request({
   name: "Your App Name",
-  // A path to your app's logo
   logo: "https://your-domain.com/logo.png",
-  // A description of the purpose of the request
   purpose: "Your Purpose",
-  // Optional scope for the user's unique identifier
   scope: "your-scope",
   // Enable dev mode here
   devMode: true,
 });
 ```
+
+</TabItem>
+</Tabs>
