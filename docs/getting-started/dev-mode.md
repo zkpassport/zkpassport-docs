@@ -13,7 +13,11 @@ Mock passports are signed by the Zero Knowledge Republic (ZKR), a mock issuer we
 
 ## Enable Dev Mode in the Mobile App
 
-To enable dev mode in the mobile app, open the **Settings** screen by tapping the gear icon in the top right corner of the main "Your IDs" screen, then tap **Developer Options**.
+If you've just installed the app and don't have any ID loaded yet, you'll land on the welcome screen. Enable dev mode from here by long pressing the empty area just above the **Scan your ID** button (highlighted below). This lets you access dev mode without having to scan a real passport or ID first.
+
+<img src="/img/dev-mode-0.webp" alt="Welcome screen with the long press area highlighted above the Scan your ID button" width="200" />
+
+If you already have an ID loaded, open the **Settings** screen instead by tapping the gear icon in the top right corner of the main "Your IDs" screen, then tap **Developer Options**.
 
 <img src="/img/dev-mode-1.webp" alt="Settings screen" width="200" />
 
