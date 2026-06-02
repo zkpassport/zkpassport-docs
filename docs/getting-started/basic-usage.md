@@ -172,8 +172,6 @@ onResult(
 
     // Access the original request parameters
     console.log("age over", result.age.gte.expected);
-    console.log("nationality in", result.nationality.in.expected);
-    console.log("nationality not in", result.nationality.out.expected);
 
     // Verify proof validity and get the unique identifier
     console.log("proofs are valid", verified);
