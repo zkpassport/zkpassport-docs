@@ -49,6 +49,11 @@ const sidebars: SidebarsConfig = {
           label: "Private FaceMatch",
           id: "examples/facematch",
         },
+        {
+          type: "doc",
+          label: "Unlinkable Identifiers",
+          id: "examples/unlinkable-identifiers",
+        },
       ],
     },
     "api",

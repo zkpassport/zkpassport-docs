@@ -14,3 +14,4 @@ If you are not entirely sure what you can do with the SDK, you can check some of
 - [Client-Server Implementation](./client-server.md) - See how to use the SDK on the client-side and verify proofs on the
   server-side
 - [Private FaceMatch](./facematch.md) - Verify the ID holder's face matches the ID photo
+- [Unlinkable Identifiers (OPRF)](./unlinkable-identifiers.md) - Get a unique identifier that nobody can link back to the user's ID

@@ -235,6 +235,6 @@ onResult(({ verified, result, uniqueIdentifier }) => {
 - **`mode`** — the proof mode: `"fast"` (default), `"compressed"`, or `"compressed-evm"` (required for [onchain verification](./onchain)).
 - **`validity`** — how many seconds ago the proof checking the ID's expiry date may have been generated. Defaults to 7 days.
 - **`devMode`** — accept mock proofs from the dev-mode passports. See [Dev Mode](./dev-mode).
-- **`uniqueIdentifierType`** / **`oprfKeyId`** — opt into a salted unique identifier. A salted identifier requires `.facematch("strict")` in the query.
+- **`uniqueIdentifierType`** / **`oprfKeyId`** — opt into a salted unique identifier. A salted identifier requires `.facematch("strict")` in the query. See [Unlinkable Identifiers (OPRF)](../examples/unlinkable-identifiers).
 
 See the [API Reference](../api) for the complete list and exact types.
