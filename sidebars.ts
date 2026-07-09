@@ -51,8 +51,8 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: "doc",
-          label: "Unlinkable Identifiers",
-          id: "examples/unlinkable-identifiers",
+          label: "Salted Unique Identifiers",
+          id: "examples/salted-identifiers",
         },
       ],
     },

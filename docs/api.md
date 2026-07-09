@@ -57,7 +57,7 @@ Parameters:
 - `projectID` (optional): The project ID of your service.
 - `validity` (optional): How many seconds ago the proof checking the ID's expiry date may have been generated. Defaults to 7 days.
 - `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode accepts mock proofs generated from the mock passports in the app.
-- `uniqueIdentifierType` (optional): `NullifierType.NON_SALTED` (default) or `NullifierType.SALTED`. A salted identifier requires `.facematch("strict")` in the query — see [Unlinkable Identifiers (OPRF)](./examples/unlinkable-identifiers).
+- `uniqueIdentifierType` (optional): `NullifierType.NON_SALTED` (default) or `NullifierType.SALTED`. A salted identifier requires `.facematch("strict")` in the query — see [Salted Unique Identifiers (OPRF)](./examples/salted-identifiers).
 - `oprfKeyId` (optional): OPRF key identifier; implies a salted unique identifier.
 - `topicOverride`, `keyPairOverride`, `cloudProverUrl`, `bridgeUrl` (optional): Advanced configuration. `cloudProverUrl` overrides the cloud prover for compressed proofs and `bridgeUrl` overrides the websocket bridge to the mobile app. Contact us if you need these.
 
