@@ -28,7 +28,7 @@ No, ZKPassport is designed with privacy as a core principle. Your personal data 
 
 The unique identifier is derived from the ID data (retrieved from the chip). This data is combined with the domain name and the scope the service specified and hashed using Poseidon2. The resulting hash is used as the unique identifier. This ensures the unique identifier is the same for the same ID while differing between different services. And thanks to the one-way property of hash functions, it's not possible to derive the ID data from the unique identifier.
 
-However, it's possible to derive the unique identifier from the ID data if you have complete knowledge of the ID chip data, the domain name and scope. This could include the issuing government (if they keep a record of all the IDs they signed). In order to prevent this, we are currently working on supporting salted unique identifiers, i.e. adding a secret to the derivation process using vOPRFs (Verifiable Oblivious Pseudo-Random Functions).
+However, it's possible to derive the unique identifier from the ID data if you have complete knowledge of the ID chip data, the domain name and scope. This could include the issuing government (if they keep a record of all the IDs they signed). To prevent this, you can request a salted unique identifier, which adds a secret to the derivation process using vOPRFs (Verifiable Oblivious Pseudo-Random Functions). See the [Salted Unique Identifiers](./examples/salted-identifiers.md) example to learn how to use it.
 
 ### Which identity documents are supported?
 

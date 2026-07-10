@@ -13,6 +13,7 @@ Following this logic, you can use this as a base to check the personhood of the 
 
 - A person can have multiple IDs, so if you want to have `one person <-> one account` for example, it won't be exactly that but more `one ID <-> one account`.
 - If you want a truly robust proof of personhood, you should use [FaceMatch](./facematch.md) in your query. And for greater protection against spoofing, you should use the `strict` mode.
+- The default identifier can be recomputed by anyone with complete knowledge of the ID chip data — including the government that issued the ID. For increased privacy, request a [salted unique identifier](./salted-identifiers.md) instead, which cannot be linked back to the ID by the issuing entity.
 
 ## Check uniqueness
 
