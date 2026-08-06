@@ -403,7 +403,7 @@ Applies an immutable [policy](./getting-started/policies) fetched from the [dash
 
 - `id`: The policy id (e.g. `"pol_xyz"`).
 
-Constraints (throws otherwise): `.policy()` must be called on its own (it cannot be combined with builder methods like `.gte()` / `.disclose()`) and only once per request.
+Constraints (throws otherwise): `.policy()` can only be called once per request and cannot be combined with builder methods like `.gte()` / `.disclose()`. The one exception is [`.bind()`](#bind), which may be chained after `.policy()` — bound values (like the user's wallet address) are only known at request time, so they are never part of a policy.
 
 #### done
 

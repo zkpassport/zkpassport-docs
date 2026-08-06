@@ -76,12 +76,13 @@ onResult(({ verified, uniqueIdentifier }) => {
 
 A policy is immutable: the SDK fetches it from the dashboard by domain and locks the request. The query is fixed, branding defaults to your dashboard project, and the scope is locked to `<policy-id>:<version>` (e.g. `pol_xyz:1`) — which keeps the user's [unique identifier](../examples/personhood) stable until you bump the policy version. You can still override `purpose` in code for a request-specific message.
 
-Because the query is fixed, `.policy()` must be called **on its own** and **only once**:
+Because the query is fixed, `.policy()` must be called **first** and **only once**. The exception is [`bind`](../api#bind): bound values (like the user's wallet address) are only known at request time, so they are never part of a policy and can be added after `.policy()`:
 
 ```typescript
 queryBuilder.gte("age", 18).policy("pol_xyz").done(); // ❌ can't combine with builder methods
 queryBuilder.policy("pol_abc").policy("pol_xyz").done(); // ❌ can't call twice
 queryBuilder.policy("pol_xyz").done(); // ✅
+queryBuilder.policy("pol_xyz").bind("user_address", address).done(); // ✅ .bind() may follow
 ```
 
 If the domain isn't registered or the id doesn't match a policy, `.policy()` throws with a clear message — register the domain (or check the id) in the dashboard, or fall back to the [self-served flow](./basic-usage).
