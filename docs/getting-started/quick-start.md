@@ -7,10 +7,6 @@ import TabItem from '@theme/TabItem';
 
 # Quick Start
 
-:::warning
-This is experimental software. While it has undergone external review, it has not yet received a formal security audit. Please use with caution and at your own risk in production environments.
-:::
-
 The fastest way to add ZKPassport to your app is the drop-in QR card from [`@zkpassport/ui`](https://www.npmjs.com/package/@zkpassport/ui). It renders the QR code, manages the whole verification flow (connecting, scanning, generating, retrying), and hands you the result. It works in React and in any vanilla JS / framework setup.
 
 ## Installation
