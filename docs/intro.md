@@ -15,7 +15,7 @@ ZKPassport enables privacy-preserving identity verification using passports and 
 - Privacy-first identity verification with zero-knowledge proofs
 - Selective disclosure of identity attributes
 - Support for passports, national IDs, and residence permits
-- A drop-in QR verification card ([`@zkpassport/ui`](./getting-started/quick-start)) for React and vanilla JS
+- A drop-in verify button ([`@zkpassport/ui`](./getting-started/quick-start)) for React and vanilla JS
 - Optional no-code configuration through the [ZKPassport Dashboard](https://dashboard.zkpassport.id)
 
 ### Sample Use Cases

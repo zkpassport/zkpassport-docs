@@ -19,24 +19,31 @@ Use this when the identifier itself is sensitive — for example anonymous votin
 
 To request one:
 
-- Set `uniqueIdentifierType` to `NullifierType.SALTED` — available both on the SDK's `request()` method and as a prop on the `@zkpassport/ui` QR code component (shown below).
+- Set `uniqueIdentifierType` to `NullifierType.SALTED` — available both on the SDK's `request()` method and as a prop on the `@zkpassport/ui` verify button (shown below).
 - Add `.facematch("strict")` to your query. Salted identifiers require the strict [FaceMatch](./facematch.md) mode, which confirms the ID is being used by its actual holder; the request throws an error without it.
 
 <Tabs groupId="framework">
 <TabItem value="react" label="React" default>
 
 ```tsx
-import { ZKPassportQRCode, NullifierType } from "@zkpassport/ui/react";
+import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
+import { NullifierType } from "@zkpassport/sdk";
 
-<ZKPassportQRCode
+<VerifyWithZKPassport
   name="ZKPassport"
   logo="https://zkpassport.id/logo.png"
   purpose="Prove your personhood"
   scope="personhood"
   uniqueIdentifierType={NullifierType.SALTED}
   query={(queryBuilder) => queryBuilder.facematch("strict").done()}
-  onResult={({ verified, uniqueIdentifier }) => {
-    if (verified) console.log("Unique identifier", uniqueIdentifier);
+  onSuccess={async ({ proofs, result }) => {
+    // Send the proofs to your server to verify them
+    const response = await fetch("/api/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proofs, result }),
+    });
+    return (await response.json()).verified;
   }}
 />;
 ```
@@ -45,17 +52,24 @@ import { ZKPassportQRCode, NullifierType } from "@zkpassport/ui/react";
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mount, NullifierType } from "@zkpassport/ui";
+import { mountVerifyButton } from "@zkpassport/ui/button";
+import { NullifierType } from "@zkpassport/sdk";
 
-mount(document.getElementById("zkpassport"), {
+mountVerifyButton(document.getElementById("zkpassport"), {
   name: "ZKPassport",
   logo: "https://zkpassport.id/logo.png",
   purpose: "Prove your personhood",
   scope: "personhood",
   uniqueIdentifierType: NullifierType.SALTED,
   query: (queryBuilder) => queryBuilder.facematch("strict").done(),
-  onResult: ({ verified, uniqueIdentifier }) => {
-    if (verified) console.log("Unique identifier", uniqueIdentifier);
+  onSuccess: async ({ proofs, result }) => {
+    // Send the proofs to your server to verify them
+    const response = await fetch("/api/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proofs, result }),
+    });
+    return (await response.json()).verified;
   },
 });
 ```
@@ -63,6 +77,22 @@ mount(document.getElementById("zkpassport"), {
 </TabItem>
 </Tabs>
 
+On your server, recreate the query and verify the proofs (see [Quick Start](../getting-started/quick-start#verify-the-proofs-on-your-server)). Pass the same `uniqueIdentifierType` to `verify()` so proofs with a different type of identifier fail verification:
+
+```typescript
+import { NullifierType } from "@zkpassport/sdk";
+
+const { query } = zkPassport.createQuery().facematch("strict").done();
+const { verified, uniqueIdentifier } = await zkPassport.verify({
+  proofs,
+  originalQuery: query,
+  queryResult: result,
+  scope: "personhood",
+  uniqueIdentifierType: NullifierType.SALTED,
+});
+if (verified) console.log("Unique identifier", uniqueIdentifier);
+```
+
 :::info
-The `onResult` callback also reports the identifier's type as `uniqueIdentifierType`. In [dev mode](../getting-started/dev-mode), mock proofs return `NullifierType.SALTED_MOCK` instead of `NullifierType.SALTED`, so you can tell real salted identifiers apart from test ones.
+`verify()` also returns the identifier's type as `uniqueIdentifierType`. In [dev mode](../getting-started/dev-mode), mock proofs return `NullifierType.SALTED_MOCK` instead of `NullifierType.SALTED`, so you can tell real salted identifiers apart from test ones.
 :::

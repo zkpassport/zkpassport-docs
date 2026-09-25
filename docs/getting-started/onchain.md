@@ -39,9 +39,9 @@ To verify proofs on EVM chains, set `mode` to `"compressed-evm"`. Bind the user'
 <TabItem value="react" label="React" default>
 
 ```tsx
-import { ZKPassportQRCode } from "@zkpassport/ui/react";
+import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
-<ZKPassportQRCode
+<VerifyWithZKPassport
   name="Your App Name"
   logo="https://your-domain.com/logo.png"
   purpose="Doing something"
@@ -61,7 +61,7 @@ import { ZKPassportQRCode } from "@zkpassport/ui/react";
       .bind("custom_data", "my-custom-data")
       .done()
   }
-  onResult={handleResult}
+  onSuccess={handleResult}
 />;
 ```
 
@@ -83,7 +83,7 @@ const queryBuilder = await zkPassport.request({
   mode: "compressed-evm",
 });
 
-const { url, onResult } = queryBuilder
+const { url, onSuccess } = queryBuilder
   .disclose("nationality")
   .disclose("document_type")
   .gte("age", 18)
@@ -114,21 +114,19 @@ const {
 
 ### 3. Generate Verification Parameters from Proof
 
-When a user completes a verification, the `onResult` callback gives you the generated `proofs` and the `sdkInstance` that produced them. Pick the EVM proof (its `name` starts with `outer_evm`) and pass it to `getSolidityVerifierParameters` to prepare the parameters for the verifier contract.
+When a user completes a verification, the `onSuccess` callback gives you the generated `proofs`. Pick the EVM proof (its `name` starts with `outer_evm`) and pass it to `getSolidityVerifierParameters` to prepare the parameters for the verifier contract. With the button, create a `ZKPassport` instance with the domain of the page the button runs on.
 
 ```typescript
-async function handleResult({ uniqueIdentifier, verified, result, proofs, sdkInstance }) {
-  if (!verified) {
-    // If the proof is not verified, save yourself some gas and return straight away
-    console.log("Proof is not verified");
-    return;
-  }
+import { ZKPassport } from "@zkpassport/sdk";
 
+const zkPassport = new ZKPassport("your-domain.com");
+
+async function handleResult({ proofs, result }) {
   // In compressed-evm mode, the proof to submit on-chain is the one named "outer_evm..."
   const evmProof = proofs.find((p) => p.name?.startsWith("outer_evm"));
 
   // Get the verification parameters
-  const verifierParams = sdkInstance.getSolidityVerifierParameters({
+  const verifierParams = zkPassport.getSolidityVerifierParameters({
     proof: evmProof,
     // Use the same scope as the one you specified on the request
     scope: "my-scope",
@@ -151,7 +149,7 @@ async function handleResult({ uniqueIdentifier, verified, result, proofs, sdkIns
 ```
 
 :::note
-`getSolidityVerifierParameters` takes a single `ProofResult` — the `outer_evm` proof above. If you're using the SDK directly instead of the card, you can call `zkPassport.getSolidityVerifierParameters(...)` on your own instance rather than `sdkInstance`.
+`getSolidityVerifierParameters` takes a single `ProofResult` — the `outer_evm` proof above.
 :::
 
 ### 4. Create Your Smart Contract

@@ -17,39 +17,28 @@ Following this logic, you can use this as a base to check the personhood of the 
 
 ## Check uniqueness
 
-To have a proof of unique ID, simply initiate a request with no information disclosure and get back the identifier.
+To have a proof of unique ID, simply initiate a request with no information disclosure, then get the identifier back when you verify the proofs on your server.
 
 <Tabs groupId="framework">
 <TabItem value="react" label="React" default>
 
 ```tsx
-import { ZKPassportQRCode } from "@zkpassport/ui/react";
+import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
-<ZKPassportQRCode
+<VerifyWithZKPassport
   name="ZKPassport"
   logo="https://zkpassport.id/logo.png"
   purpose="Prove your personhood"
   scope="personhood"
   query={(queryBuilder) => queryBuilder.done()}
-  onResult={async ({ verified, uniqueIdentifier }) => {
-    if (!verified) {
-      console.log("Verification failed");
-      return;
-    }
-    console.log("Unique identifier", uniqueIdentifier);
-    // For example, check if the user is already registered under this identifier
-    const response = await fetch(`/api/registered/${uniqueIdentifier}`);
-    const { registered } = await response.json();
-    if (registered) {
-      console.log("User is already registered");
-    } else {
-      // If not registered yet, register the user with the new identifier
-      await fetch(`/api/register`, {
-        method: "POST",
-        body: JSON.stringify({ uniqueIdentifier }),
-      });
-      console.log("User registered");
-    }
+  onSuccess={async ({ proofs, result }) => {
+    // Send the proofs to your server to verify them and register the user
+    const response = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proofs, result }),
+    });
+    return (await response.json()).registered;
   }}
 />;
 ```
@@ -58,31 +47,22 @@ import { ZKPassportQRCode } from "@zkpassport/ui/react";
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mount } from "@zkpassport/ui";
+import { mountVerifyButton } from "@zkpassport/ui/button";
 
-mount(document.getElementById("zkpassport"), {
+mountVerifyButton(document.getElementById("zkpassport"), {
   name: "ZKPassport",
   logo: "https://zkpassport.id/logo.png",
   purpose: "Prove your personhood",
   scope: "personhood",
   query: (queryBuilder) => queryBuilder.done(),
-  onResult: async ({ verified, uniqueIdentifier }) => {
-    if (!verified) {
-      console.log("Verification failed");
-      return;
-    }
-    console.log("Unique identifier", uniqueIdentifier);
-    const response = await fetch(`/api/registered/${uniqueIdentifier}`);
-    const { registered } = await response.json();
-    if (registered) {
-      console.log("User is already registered");
-    } else {
-      await fetch(`/api/register`, {
-        method: "POST",
-        body: JSON.stringify({ uniqueIdentifier }),
-      });
-      console.log("User registered");
-    }
+  onSuccess: async ({ proofs, result }) => {
+    // Send the proofs to your server to verify them and register the user
+    const response = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proofs, result }),
+    });
+    return (await response.json()).registered;
   },
 });
 ```
@@ -90,6 +70,24 @@ mount(document.getElementById("zkpassport"), {
 </TabItem>
 </Tabs>
 
-:::tip
-This example trusts the client-side result. For anything security-sensitive, verify the proofs on your server before registering the user — see the [Client-Server](./client-server.md) example.
-:::
+On your server, recreate the query and verify the proofs (see [Quick Start](../getting-started/quick-start#verify-the-proofs-on-your-server)), then use the unique identifier:
+
+```typescript
+const { query } = zkPassport.createQuery().done();
+const { verified, uniqueIdentifier } = await zkPassport.verify({
+  proofs,
+  originalQuery: query,
+  queryResult: result,
+  scope: "personhood",
+});
+if (!verified) return { registered: false };
+
+// For example, check if the user is already registered under this identifier
+if (await db.users.exists({ uniqueIdentifier })) {
+  console.log("User is already registered");
+  return { registered: false };
+}
+// If not registered yet, register the user with the new identifier
+await db.users.insert({ uniqueIdentifier });
+return { registered: true };
+```

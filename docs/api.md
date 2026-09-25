@@ -6,7 +6,7 @@ sidebar_position: 4
 
 This section provides detailed documentation for the ZKPassport SDK's public API, including classes, methods, types, and constants.
 
-For the drop-in QR verification card, see the [`@zkpassport/ui`](#zkpassportui-the-qr-card) section at the bottom of this page.
+For the drop-in verify button, see the [`@zkpassport/ui`](#zkpassportui-the-verify-button) section at the bottom of this page.
 
 ## ZKPassport Class
 
@@ -888,77 +888,96 @@ SANCTIONED_COUNTRIES: string[];
 The expected format for countries are alpha-3 country codes. However, the SDK automatically handles conversion between country names and codes when using the `in` and `out` methods.
 :::
 
-## @zkpassport/ui (the QR card)
+## @zkpassport/ui (the verify button)
 
-[`@zkpassport/ui`](https://www.npmjs.com/package/@zkpassport/ui) is the drop-in verification card built on top of the SDK. It renders the QR code, manages the bridge/scan/generate lifecycle, and exposes the SDK callbacks. Install it alongside the SDK:
+[`@zkpassport/ui`](https://www.npmjs.com/package/@zkpassport/ui) provides the **Verify with ZKPassport** button, built on top of the SDK. Clicking it opens ZKPassport's hosted verification page (`verify.zkpassport.id`) in a popup, which guides the user through the verification with the ZKPassport app and hands the proofs back to your page. Install it alongside the SDK:
 
 ```bash
 npm install @zkpassport/sdk @zkpassport/ui
 ```
 
-### React — `ZKPassportQRCode`
+The button always uses the domain of the page it runs on, so verify the proofs on your server with a `ZKPassport` instance created for that same domain.
+
+### React — `VerifyWithZKPassport`
 
 ```typescript
-import { ZKPassportQRCode } from "@zkpassport/ui/react";
+import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
-function ZKPassportQRCode(props: ZKPassportQRCodeOptions): ReactElement
+function VerifyWithZKPassport(
+  props: VerifyWithZKPassportOptions & {
+    // Render your own trigger instead of the default button
+    children?: (verification: {
+      status: "idle" | "in-progress" | "success" | "error";
+      error: string | null;
+      isLoading: boolean;
+      verify: () => void;
+    }) => ReactNode;
+  }
+): ReactElement
 ```
 
 In the Next.js App Router, the React entry is marked `"use client"`, so import it from a client component.
 
-### Vanilla — `mount`
+### Vanilla — `mountVerifyButton`
 
 ```typescript
-import { mount } from "@zkpassport/ui";
+import { mountVerifyButton } from "@zkpassport/ui/button";
 
-function mount(element: HTMLElement, options: ZKPassportQRCodeOptions): QRCardHandle
+function mountVerifyButton(element: HTMLElement, options: VerifyWithZKPassportOptions): VerifyButtonHandle
 
-type QRCardHandle = {
-  update(next: ZKPassportQRCodeOptions): void; // swap options
-  retry(): void; // rebuild the request
-  unmount(): void; // tear it all down
+type VerifyButtonHandle = {
+  update(next: VerifyWithZKPassportOptions): void; // swap options
+  unmount(): void; // remove the button
 };
 ```
 
 ### Options
 
 ```typescript
-type ZKPassportQRCodeOptions = {
-  // Every request() option is accepted as a prop/option:
-  // name, logo, purpose, scope, mode, devMode, validity, uniqueIdentifierType, oprfKeyId
-  // (the internal projectID / bridge-plumbing options are excluded)
+type VerifyWithZKPassportOptions = {
+  // Request options, as on request()
+  name?: string;
+  logo?: string;
+  purpose?: string;
+  scope?: string;
+  mode?: ProofMode;
+  devMode?: boolean;
+  validity?: number;
+  uniqueIdentifierType?: NullifierType.NON_SALTED | NullifierType.SALTED;
+  oprfKeyId?: string;
 
-  domain?: string; // Passed to new ZKPassport(...). Defaults to window.location.hostname
-  theme?: "light" | "dark" | "auto"; // Card theme
-
-  // Required: receives the SDK's QueryBuilder, applies gates, returns queryBuilder.done()
+  // Required: receives a QueryBuilder, applies gates, returns queryBuilder.done()
   query: (queryBuilder: QueryBuilder) => QueryBuilderResult;
+  // Dashboard policy id, applied to the builder before `query` runs
+  policyId?: string;
 
-  // UI callbacks
-  onReady?: () => void; // QR is scannable (fires once per request)
-  onRetryClicked?: () => void; // User clicked the retry button after an error
+  // Button display
+  label?: string; // Defaults to "Verify with ZKPassport"
+  size?: "small" | "medium" | "large"; // Defaults to "medium"
+  theme?: "light" | "dark" | "auto"; // Defaults to "light"; "auto" follows the OS
+  showErrorMessage?: boolean; // Set to false to hide the error line and rely on onError
+  classes?: { root?: string; button?: string; error?: string };
+  windowMode?: "popup" | "tab"; // Defaults to "popup"
 
-  // SDK lifecycle callbacks (same signatures as the SDK)
-  onBridgeConnect?: () => void;
+  // Callbacks
   onRequestReceived?: () => void;
   onGeneratingProof?: () => void;
-  onProofGenerated?: (proof: ProofResult) => void;
-  onResult?: (response: {
-    uniqueIdentifier: string | undefined;
-    uniqueIdentifierType: NullifierType | undefined;
-    verified: boolean;
-    result: QueryResult;
-    queryResultErrors?: QueryResultErrors;
+  onProofGenerated?: (progress: { index?: number; total?: number; name?: string }) => void;
+  // Return false (or throw) to show the error state instead of success
+  onSuccess?: (response: {
     proofs: ProofResult[];
-    sdkInstance: ZKPassport;
-  }) => void;
+    result: QueryResult;
+  }) => void | boolean | Promise<void | boolean>;
   onReject?: () => void;
   onError?: (message: string) => void;
+  onClose?: () => void; // The user closed the popup before a result
 };
 ```
 
+The button waits for your `onSuccess` handler before showing its success state, so it can send the proofs to your server and return whether they were accepted. The proofs are not verified in the browser — verify them on your server with [`verify()`](#verify).
+
 :::note
-Styles are auto-injected as a `<style>` tag wrapped in `@layer zkpassport`, so your app styles always win. For CSP-strict environments you can opt out of inline styles by importing the standalone bundle: `import "@zkpassport/ui/styles.css"`.
+The button's styles are injected as a `<style>` tag. To restyle it, set the `--zkp-btn-*` CSS custom properties (for example `--zkp-btn-bg`, `--zkp-btn-fg`, `--zkp-btn-radius` or `--zkp-btn-font-size`) on the mount element or any ancestor, or pass a function as `children` to render your own trigger.
 :::
 
-To apply a dashboard policy through the card, return `queryBuilder.policy("pol_xyz").done()` from the `query` callback. See [Dashboard & Policies](./getting-started/policies).
+To apply a dashboard policy, pass its id as `policyId` and return `queryBuilder.done()` from the `query` callback. See [Dashboard & Policies](./getting-started/policies).
