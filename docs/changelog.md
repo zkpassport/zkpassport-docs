@@ -20,6 +20,7 @@ SDK 0.17.x requires version **1.4.0 or higher** of the ZKPassport mobile app. Ol
 - `verify()` always checks the scope. If the request set a `scope` (or applied a policy), pass the same `scope` to `verify()`, otherwise verification fails.
 - The requested unique identifier type is enforced: proofs with a different type fail verification. Pass `uniqueIdentifierType` to `verify()` to enforce it on your server.
 - `.facematch()` without an argument now uses the `"strict"` mode. Pass `"regular"` to keep the faster check.
+- `@zkpassport/ui` no longer installs `@zkpassport/sdk`. If your code imports from `@zkpassport/sdk`, for example to call `verify()`, add it to your dependencies at the same version as `@zkpassport/ui`.
 
 ### New Features
 
