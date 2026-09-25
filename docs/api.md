@@ -36,7 +36,7 @@ async request(options: {
   projectID?: string;
   validity?: number;
   devMode?: boolean;
-  uniqueIdentifierType?: NullifierType.NON_SALTED | NullifierType.SALTED;
+  uniqueIdentifierType?: NullifierType.NON_SALTED | NullifierType.SALTED | NullifierType.NONE;
   oprfKeyId?: string;
   topicOverride?: string;
   keyPairOverride?: { privateKey: Uint8Array; publicKey: Uint8Array };
@@ -52,12 +52,12 @@ Parameters:
 - `name` (optional): Your application name. Defaults to your dashboard project branding, then your domain.
 - `logo` (optional): URL to your application's logo. Defaults to your dashboard project branding.
 - `purpose` (optional): Description of why you're requesting verification. Defaults to the policy's purpose (if a policy is applied), then a generic message.
-- `scope` (optional): Scope for the unique identifier. Defaults to your domain. When you apply a policy with [`.policy()`](#policy), the scope is locked to `<policy-id>:<version>`.
+- `scope` (optional): Scope for the unique identifier. Defaults to your domain, or to the policy id when you apply a policy with [`.policy()`](#policy).
 - `mode` (optional): The proof mode — `"fast"` (default), `"compressed"`, or `"compressed-evm"` (required for [onchain verification](./getting-started/onchain)).
 - `projectID` (optional): The project ID of your service.
 - `validity` (optional): How many seconds ago the proof checking the ID's expiry date may have been generated. Defaults to 7 days.
 - `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode accepts mock proofs generated from the mock passports in the app.
-- `uniqueIdentifierType` (optional): `NullifierType.NON_SALTED` (default) or `NullifierType.SALTED`. A salted identifier requires `.facematch("strict")` in the query — see [Salted Unique Identifiers (OPRF)](./examples/salted-identifiers).
+- `uniqueIdentifierType` (optional): `NullifierType.NON_SALTED` (default), `NullifierType.SALTED`, or `NullifierType.NONE` for proofs without a unique identifier. A salted identifier requires `.facematch("strict")` in the query — see [Salted Unique Identifiers (OPRF)](./examples/salted-identifiers).
 - `oprfKeyId` (optional): OPRF key identifier; implies a salted unique identifier.
 - `topicOverride`, `keyPairOverride`, `cloudProverUrl`, `bridgeUrl` (optional): Advanced configuration. `cloudProverUrl` overrides the cloud prover for compressed proofs and `bridgeUrl` overrides the websocket bridge to the mobile app. Contact us if you need these.
 
@@ -66,6 +66,14 @@ To apply a policy defined in the [dashboard](./getting-started/policies), chain 
 :::
 
 Returns a `QueryBuilder` instance for building the verification query.
+
+#### createQuery
+
+```typescript
+createQuery(): QueryBuilder
+```
+
+Creates a query without starting a request: it doesn't connect to the mobile app, and `done()` only returns `{ query }`. Use it on your server to recreate the original query you pass to [`verify()`](#verify), so a tampered client can't get proofs for a weaker query accepted.
 
 #### verify
 
@@ -78,6 +86,8 @@ async verify({
   scope,
   devMode,
   oprfKeyId,
+  uniqueIdentifierType,
+  verifierMode,
 }: {
   proofs: Array<ProofResult>;
   originalQuery: Query;
@@ -86,6 +96,8 @@ async verify({
   scope?: string;
   devMode?: boolean;
   oprfKeyId?: string;
+  uniqueIdentifierType?: NullifierType.NON_SALTED | NullifierType.SALTED | NullifierType.NONE;
+  verifierMode?: "auto" | "local" | "api";
 }): Promise<{
   uniqueIdentifier: string | undefined;
   uniqueIdentifierType: NullifierType | undefined;
@@ -99,12 +111,14 @@ Verifies the proofs received from the mobile app. You can store the proofs, the 
 Parameters:
 
 - `proofs`: The proofs to verify
-- `originalQuery`: The original query object — the `query` returned by `done()` (or the `query` callback in `@zkpassport/ui`). **Required.**
+- `originalQuery`: The original query object. On your server, recreate it with [`createQuery()`](#createquery) rather than accepting it from the client. **Required.**
 - `queryResult`: The query result to verify against
 - `validity` (optional): How many seconds ago the proof checking the ID's expiry date may have been generated. Defaults to 7 days.
-- `scope` (optional): The scope used when requesting the proof
+- `scope` (optional): The scope used when requesting the proof (the policy id for a policy-driven request, unless the request set its own scope). Proofs for a different scope fail verification.
 - `devMode` (optional): Whether to enable dev mode (defaults to false). Dev mode accepts mock proofs generated from the mock passports in the app.
 - `oprfKeyId` (optional): The OPRF key id, if a salted unique identifier was requested
+- `uniqueIdentifierType` (optional): The unique identifier type requested. Proofs with a different type fail verification.
+- `verifierMode` (optional): `"auto"` (default) verifies locally and falls back to the ZKPassport verifier API when the local result is not verified; `"local"` and `"api"` force one or the other.
 
 Returns an object containing:
 
@@ -391,7 +405,7 @@ facematch(mode?: FacematchMode): QueryBuilder
 
 Requires that the ID holder's face matches the photo on the ID, verified locally on the device. See the [Private FaceMatch example](./examples/facematch).
 
-- `mode` (optional): `"regular"` (default) runs a basic liveness check and is faster; `"strict"` runs an extensive liveness check for higher-security flows such as KYC.
+- `mode` (optional): `"strict"` (default) runs an extensive liveness check for higher-security flows such as KYC; `"regular"` runs a basic liveness check and is faster.
 
 #### policy
 
@@ -399,7 +413,7 @@ Requires that the ID holder's face matches the photo on the ID, verified locally
 policy(id: string): QueryBuilder
 ```
 
-Applies an immutable [policy](./getting-started/policies) fetched from the [dashboard](https://dashboard.zkpassport.id). The policy's query is applied, its scope is locked to `<id>:<version>`, and branding/purpose default to the dashboard configuration.
+Applies an immutable [policy](./getting-started/policies) fetched from the [dashboard](https://dashboard.zkpassport.id). The policy's query is applied, the scope defaults to the policy id (unless the request sets its own `scope`), and branding/purpose default to the dashboard configuration.
 
 - `id`: The policy id (e.g. `"pol_xyz"`).
 
@@ -417,6 +431,11 @@ done(): {
   onGeneratingProof: (callback: () => void) => void;
   onBridgeConnect: (callback: () => void) => void;
   onProofGenerated: (callback: (result: ProofResult) => void) => void;
+  onSuccess: (callback: (response: {
+    proofs: ProofResult[];
+    result: QueryResult;
+  }) => void) => void;
+  // Deprecated: use onSuccess
   onResult: (callback: (response: {
     uniqueIdentifier: string | undefined;
     uniqueIdentifierType: NullifierType | undefined;
@@ -436,7 +455,7 @@ done(): {
 Finalizes the query and returns an object containing:
 
 - `url`: URL to redirect users to the ZKPassport app
-- `query`: The original query object — pass this to [`verify()`](#verify) as `originalQuery` for server-side verification
+- `query`: The query object sent to the mobile app. To verify on your server, recreate the same query there with [`createQuery()`](#createquery)
 - `requestId`: Unique identifier for this request
 - `policy`: The policy id used to build the request, if one was applied with [`.policy()`](#policy)
 - Event handlers (see Event Handlers section below)
@@ -476,7 +495,29 @@ Called when an individual proof has been generated. Multiple proofs may be gener
 - `index`: The index of the proof (starting from 0)
 - `total`: The total number of proofs that should be sent back by the mobile app
 
+### onSuccess
+
+```typescript
+onSuccess(callback: (response: {
+  proofs: ProofResult[];
+  result: QueryResult;
+}) => void): void
+```
+
+Called when the user has completed the request and all proofs were received. This is the main callback you'll use to handle the verification results. The callback receives:
+
+- `proofs`: The raw proofs
+- `result`: The result of the query
+
+:::warning
+The proofs are not verified at this point, and a result checked in the browser can be tampered with. Send the `proofs` and the `result` to your server and verify them there with [`verify()`](#verify), which also returns the `uniqueIdentifier`.
+:::
+
 ### onResult
+
+:::warning Deprecated
+Use [`onSuccess`](#onsuccess) and verify the proofs on your server instead. The `verified` flag is computed in the browser, so it can't be trusted.
+:::
 
 ```typescript
 onResult(callback: (response: {
@@ -490,19 +531,15 @@ onResult(callback: (response: {
 }) => void): void
 ```
 
-Called when all proofs have been generated and verified. This is the main callback you'll use to handle the verification results. The callback receives a response object containing:
+Called when all proofs have been generated and verified in the browser. The callback receives a response object containing:
 
 - `uniqueIdentifier`: A unique identifier for the user's ID (undefined if verification failed)
 - `uniqueIdentifierType`: The type of unique identifier (see [`NullifierType`](#additional-types))
 - `verified`: Whether all proofs were successfully verified
 - `result`: The result of the verification
 - `queryResultErrors`: Detailed error information if verification fails (undefined if verification succeeds)
-- `proofs`: The raw proofs — pass them (with the original `query` and `result`) to [`verify()`](#verify) to re-verify server-side
-- `sdkInstance`: The `ZKPassport` instance that produced this result (handy for calling e.g. `getSolidityVerifierParameters` from a `@zkpassport/ui` callback)
-
-:::warning
-If `verified` is `false`, you should not trust any of the results and `uniqueIdentifier` will be undefined.
-:::
+- `proofs`: The raw proofs
+- `sdkInstance`: The `ZKPassport` instance that produced this result
 
 ### onReject
 
@@ -544,8 +581,8 @@ interface RequestOptions {
   validity?: number; // (Optional) How many seconds ago the proof should have been generated
   // (defaults to 7 days in seconds)
   devMode?: boolean; // Optional flag to enable dev mode (defaults to false)
-  // Opt into a salted unique identifier (requires .facematch("strict"))
-  uniqueIdentifierType?: NullifierType.NON_SALTED | NullifierType.SALTED;
+  // SALTED requires .facematch("strict"); NONE omits the unique identifier
+  uniqueIdentifierType?: NullifierType.NON_SALTED | NullifierType.SALTED | NullifierType.NONE;
   oprfKeyId?: string; // OPRF key identifier; implies a salted unique identifier
   topicOverride?: string; // Optional override for the request ID
   keyPairOverride?: {
@@ -638,16 +675,18 @@ interface QueryResult {
 ```typescript
 interface QueryBuilderResult {
   url: string; // URL to redirect users to the ZKPassport app
-  query: Query; // The original query object (pass to verify() as originalQuery)
+  query: Query; // The query object sent to the mobile app
   requestId: string; // Unique identifier for this request
   policy?: string; // The policy id, if .policy() was applied
   onRequestReceived: (callback: () => void) => void; // Called when request is received
   onGeneratingProof: (callback: () => void) => void; // Called when proof generation starts
   onBridgeConnect: (callback: () => void) => void; // Called when bridge connects
   onProofGenerated: (callback: (proof: ProofResult) => void) => void; // Called for each proof
+  // Called with the unverified proofs and result
+  onSuccess: (callback: (response: { proofs: ProofResult[]; result: QueryResult }) => void) => void;
   onResult: (
     callback: (response: {
-      // Called with final results
+      // Deprecated: use onSuccess
       uniqueIdentifier: string | undefined;
       uniqueIdentifierType: NullifierType | undefined;
       verified: boolean;
@@ -669,7 +708,6 @@ interface QueryBuilderResult {
 ```typescript
 type Policy = {
   id: string; // e.g. "pol_xyz"
-  version: number; // Positive integer
   name: string;
   purpose: string; // Default purpose shown to the user
   projectId: string | null;
@@ -751,6 +789,7 @@ enum NullifierType {
   SALTED = 1,
   NON_SALTED_MOCK = 2,
   SALTED_MOCK = 3,
+  NONE = 4, // No unique identifier
 }
 
 // Type for numerical fields that can be compared

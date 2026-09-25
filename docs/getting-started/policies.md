@@ -74,7 +74,7 @@ onResult(({ verified, uniqueIdentifier }) => {
 
 ## What a policy locks
 
-A policy is immutable: the SDK fetches it from the dashboard by domain and locks the request. The query is fixed, branding defaults to your dashboard project, and the scope is locked to `<policy-id>:<version>` (e.g. `pol_xyz:1`) — which keeps the user's [unique identifier](../examples/personhood) stable until you bump the policy version. You can still override `purpose` in code for a request-specific message.
+A policy is immutable: the SDK fetches it from the dashboard by domain and locks the request. The query is fixed, branding defaults to your dashboard project, and the scope defaults to the policy id (e.g. `pol_xyz`), which the user's [unique identifier](../examples/personhood) is tied to. You can still override `purpose` (and `scope`) in code.
 
 Because the query is fixed, `.policy()` must be called **first** and **only once**. The exception is [`bind`](../api#bind): bound values (like the user's wallet address) are only known at request time, so they are never part of a policy and can be added after `.policy()`:
 
