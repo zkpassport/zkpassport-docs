@@ -73,7 +73,7 @@ Returns a `QueryBuilder` instance for building the verification query.
 createQuery(): QueryBuilder
 ```
 
-Creates a query without starting a request: it doesn't connect to the mobile app, and `done()` only returns `{ query }`. Use it on your server to recreate the original query you pass to [`verify()`](#verify), so a tampered client can't get proofs for a weaker query accepted.
+Builds a query without starting a request, so `done()` only returns `{ query }`. Use it on your server to recreate the query you pass to [`verify()`](#verify).
 
 #### verify
 
@@ -510,13 +510,13 @@ Called when the user has completed the request and all proofs were received. Thi
 - `result`: The result of the query
 
 :::warning
-The proofs are not verified at this point, and a result checked in the browser can be tampered with. Send the `proofs` and the `result` to your server and verify them there with [`verify()`](#verify), which also returns the `uniqueIdentifier`.
+The proofs aren't verified yet. Send the `proofs` and the `result` to your server and verify them there with [`verify()`](#verify), which also returns the `uniqueIdentifier`.
 :::
 
 ### onResult
 
 :::warning Deprecated
-Use [`onSuccess`](#onsuccess) and verify the proofs on your server instead. The `verified` flag is computed in the browser, so it can't be trusted.
+Use [`onSuccess`](#onsuccess) and verify the proofs on your server instead.
 :::
 
 ```typescript
@@ -538,8 +538,12 @@ Called when all proofs have been generated and verified in the browser. The call
 - `verified`: Whether all proofs were successfully verified
 - `result`: The result of the verification
 - `queryResultErrors`: Detailed error information if verification fails (undefined if verification succeeds)
-- `proofs`: The raw proofs
+- `proofs`: The raw proofs — pass them (with the original `query` and `result`) to [`verify()`](#verify) to re-verify server-side
 - `sdkInstance`: The `ZKPassport` instance that produced this result
+
+:::warning
+If `verified` is `false`, you should not trust any of the results and `uniqueIdentifier` will be undefined.
+:::
 
 ### onReject
 
@@ -974,7 +978,7 @@ type VerifyWithZKPassportOptions = {
 };
 ```
 
-The button waits for your `onSuccess` handler before showing its success state, so it can send the proofs to your server and return whether they were accepted. The proofs are not verified in the browser — verify them on your server with [`verify()`](#verify).
+The proofs aren't verified in the browser — verify them on your server with [`verify()`](#verify).
 
 :::note
 The button's styles are injected as a `<style>` tag. To restyle it, set the `--zkp-btn-*` CSS custom properties (for example `--zkp-btn-bg`, `--zkp-btn-fg`, `--zkp-btn-radius` or `--zkp-btn-font-size`) on the mount element or any ancestor, or pass a function as `children` to render your own trigger.

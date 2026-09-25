@@ -160,7 +160,7 @@ onProofGenerated(({ proof, vkeyHash, version, name }) => {
 The main callback. Triggered once all proofs have been generated. You get the raw `proofs` and the `result` of your query.
 
 :::warning
-The proofs are not verified at this point, and a result checked in the browser can be tampered with. Send the proofs and the result to your server and verify them there with [`verify()`](../api#verify) before trusting them — see [Quick Start](./quick-start#verify-the-proofs-on-your-server). `verify()` also returns the unique identifier tied to the user's ID (see [Personhood](../examples/personhood)).
+The proofs aren't verified yet. Verify them on your server with [`verify()`](../api#verify) before trusting the result — see [Quick Start](./quick-start#verify-the-proofs-on-your-server). `verify()` also returns the unique identifier tied to the user's ID (see [Personhood](../examples/personhood)).
 :::
 
 ```typescript
@@ -180,7 +180,7 @@ onSuccess(({ proofs, result }) => {
 
 With the button, your `onSuccess` handler decides the final state: return `false` (or throw) to show the error state, for example when your server rejects the proofs.
 
-`onResult`, which verified the proofs in the browser and returned a `verified` flag and the `uniqueIdentifier`, is deprecated because that flag can't be trusted. The button doesn't support it.
+`onResult` is deprecated in favor of `onSuccess`, and the button doesn't support it.
 
 ### Rejection and errors
 

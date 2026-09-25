@@ -20,7 +20,7 @@ To verify proofs server-side, the server needs two things from the client, both 
 - **`proofs`** — the raw proofs.
 - **`queryResult`** — the result object (`result` on the `onSuccess` payload).
 
-The server also needs the original query. Recreate it on the server with `createQuery()` rather than accepting it from the client, so a tampered client can't get proofs for a weaker query accepted.
+The server also needs the original query: recreate it there with `createQuery()` instead of taking it from the browser.
 
 ## Client-Side Implementation
 
@@ -150,7 +150,7 @@ app.post("/register", async (req, res) => {
     }
 
     // Initialize the ZKPassport SDK on the server.
-    // This must be the domain of the site the button runs on, and you
+    // This must be the same domain as the client-side implementation, and you
     // cannot skip it as it isn't auto-detected outside the browser.
     const zkPassport = new ZKPassport("your-domain.com");
 
@@ -203,4 +203,4 @@ app.listen(PORT, () => {
 
 1. **Never trust client-side verification alone** — Always verify proofs on your server as the client-side verification can be tampered with by the user.
 2. **Use HTTPS** — All communication between client and server should be encrypted.
-3. **Match the domain and scope** — The server's `ZKPassport` instance must use the domain of the site the button runs on, and if you set a custom `scope` on the request, pass the same `scope` to `verify()` — verification fails otherwise.
+3. **Match the domain and scope** — The server's `ZKPassport` instance must use the same domain you verified against, and if you set a custom `scope` on the request, pass the same `scope` to `verify()`.

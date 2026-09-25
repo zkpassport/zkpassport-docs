@@ -92,7 +92,7 @@ The `query` callback receives the SDK's query builder — chain any conditions y
 
 ## Verify the proofs on your server
 
-The proofs are not verified in the browser, where the result could be tampered with. On your server, recreate the same query with `createQuery()` and pass it to `verify()` along with the proofs, the result, and the scope you used. The button always uses the domain of the page it runs on, so create the `ZKPassport` instance with that domain.
+On your server, recreate the same query with `createQuery()` and pass it to `verify()` along with the proofs, the result, and the scope you used. Create the `ZKPassport` instance with the domain of the page the button runs on.
 
 ```ts
 import { ZKPassport } from "@zkpassport/sdk";
