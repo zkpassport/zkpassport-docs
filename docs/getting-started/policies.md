@@ -15,6 +15,10 @@ Applying a policy with `.policy("pol_xyz")` produces the same verification flow 
 
 Register your domain at [dashboard.zkpassport.id](https://dashboard.zkpassport.id), set your branding, and create a policy. You'll get a policy id like `pol_xyz` to use below.
 
+:::note
+Register the exact domain your site is served from. The verify button always uses the domain of the page it runs on, so a site served from `www.example.com` needs `www.example.com` registered, not `example.com`.
+:::
+
 ## Applying a policy
 
 Pass your policy id instead of chaining builder methods — as `policyId` on the button, or with `.policy()` on the SDK. The query and branding come from the dashboard, so you don't repeat them in code.
