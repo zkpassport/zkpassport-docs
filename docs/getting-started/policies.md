@@ -17,20 +17,21 @@ Register your domain at [dashboard.zkpassport.id](https://dashboard.zkpassport.i
 
 ## Applying a policy
 
-Call `.policy()` with your policy id instead of chaining builder methods. The query and branding come from the dashboard, so you don't repeat them in code.
+Pass your policy id instead of chaining builder methods — as `policyId` on the button, or with `.policy()` on the SDK. The query and branding come from the dashboard, so you don't repeat them in code.
 
 <Tabs groupId="framework">
 <TabItem value="react" label="React" default>
 
 ```tsx
-import { ZKPassportQRCode } from "@zkpassport/ui/react";
+import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
 export default function VerifyPage() {
   return (
-    <ZKPassportQRCode
-      query={(queryBuilder) => queryBuilder.policy("pol_xyz").done()}
-      onResult={({ verified, uniqueIdentifier }) => {
-        if (verified) console.log("Verified", uniqueIdentifier);
+    <VerifyWithZKPassport
+      policyId="pol_xyz"
+      query={(queryBuilder) => queryBuilder.done()}
+      onSuccess={({ proofs, result }) => {
+        // Send the proofs and the result to your server and verify them there
       }}
     />
   );
@@ -41,12 +42,13 @@ export default function VerifyPage() {
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mount } from "@zkpassport/ui";
+import { mountVerifyButton } from "@zkpassport/ui/button";
 
-mount(document.getElementById("zkpassport"), {
-  query: (queryBuilder) => queryBuilder.policy("pol_xyz").done(),
-  onResult: ({ verified, uniqueIdentifier }) => {
-    if (verified) console.log("Verified", uniqueIdentifier);
+mountVerifyButton(document.getElementById("zkpassport"), {
+  policyId: "pol_xyz",
+  query: (queryBuilder) => queryBuilder.done(),
+  onSuccess: ({ proofs, result }) => {
+    // Send the proofs and the result to your server and verify them there
   },
 });
 ```
@@ -62,19 +64,21 @@ const zkPassport = new ZKPassport("your-domain.com");
 // name/logo/purpose are optional — they default to your dashboard branding and policy
 const queryBuilder = await zkPassport.request({});
 
-const { url, onResult } = queryBuilder.policy("pol_xyz").done();
+const { url, onSuccess } = queryBuilder.policy("pol_xyz").done();
 
-onResult(({ verified, uniqueIdentifier }) => {
-  if (verified) console.log("Verified", uniqueIdentifier);
+onSuccess(({ proofs, result }) => {
+  // Send the proofs and the result to your server and verify them there
 });
 ```
 
 </TabItem>
 </Tabs>
 
+On your server, verify the proofs as in the [Quick Start](./quick-start#verify-the-proofs-on-your-server): recreate the policy's query with `createQuery()` and pass the policy id as the `scope` (or your own `scope`, if the request sets one). The dashboard shows ready-to-use client and server code for each policy.
+
 ## What a policy locks
 
-A policy is immutable: the SDK fetches it from the dashboard by domain and locks the request. The query is fixed, branding defaults to your dashboard project, and the scope is locked to `<policy-id>:<version>` (e.g. `pol_xyz:1`) — which keeps the user's [unique identifier](../examples/personhood) stable until you bump the policy version. You can still override `purpose` in code for a request-specific message.
+A policy is immutable: the SDK fetches it from the dashboard by domain and locks the request. The query is fixed, branding defaults to your dashboard project, and the scope defaults to the policy id (e.g. `pol_xyz`), which the user's [unique identifier](../examples/personhood) is tied to. You can still override `purpose` (and `scope`) in code.
 
 Because the query is fixed, `.policy()` must be called **first** and **only once**. The exception is [`bind`](../api#bind): bound values (like the user's wallet address) are only known at request time, so they are never part of a policy and can be added after `.policy()`:
 
@@ -84,5 +88,7 @@ queryBuilder.policy("pol_abc").policy("pol_xyz").done(); // ❌ can't call twice
 queryBuilder.policy("pol_xyz").done(); // ✅
 queryBuilder.policy("pol_xyz").bind("user_address", address).done(); // ✅ .bind() may follow
 ```
+
+With the button's `policyId`, the policy is already applied to the builder your `query` callback receives, so return `queryBuilder.done()`, optionally after `.bind()`.
 
 If the domain isn't registered or the id doesn't match a policy, `.policy()` throws with a clear message — register the domain (or check the id) in the dashboard, or fall back to the [self-served flow](./basic-usage).

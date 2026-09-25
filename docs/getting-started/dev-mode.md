@@ -31,15 +31,15 @@ Once enabled, mock IDs issued by the Zero Knowledge Republic (with different dat
 
 ## Enable Dev Mode in the SDK
 
-To enable dev mode, set `devMode` to `true`. Without it, proofs from mock passports are considered invalid. It's available both as a prop on the `@zkpassport/ui` card and as an option on `request()` when using the SDK directly.
+To enable dev mode, set `devMode` to `true`. Without it, proofs from mock passports are considered invalid. It's available both as a prop on the `@zkpassport/ui` button and as an option on `request()` when using the SDK directly. When you verify the proofs on your server, pass `devMode: true` to `verify()` as well.
 
 <Tabs groupId="framework">
 <TabItem value="react" label="React" default>
 
 ```tsx
-import { ZKPassportQRCode } from "@zkpassport/ui/react";
+import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
-<ZKPassportQRCode
+<VerifyWithZKPassport
   name="Your App Name"
   logo="https://your-domain.com/logo.png"
   purpose="Your Purpose"
@@ -47,9 +47,8 @@ import { ZKPassportQRCode } from "@zkpassport/ui/react";
   // Enable dev mode here
   devMode
   query={(queryBuilder) => queryBuilder.gte("age", 18).done()}
-  onResult={({ verified, uniqueIdentifier }) => {
-    // For mock passports, the unique identifier is always 1
-    if (verified) console.log("Unique identifier", uniqueIdentifier);
+  onSuccess={({ proofs, result }) => {
+    // Verify on your server with verify({ ..., devMode: true })
   }}
 />;
 ```
@@ -58,9 +57,9 @@ import { ZKPassportQRCode } from "@zkpassport/ui/react";
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mount } from "@zkpassport/ui";
+import { mountVerifyButton } from "@zkpassport/ui/button";
 
-mount(document.getElementById("zkpassport"), {
+mountVerifyButton(document.getElementById("zkpassport"), {
   name: "Your App Name",
   logo: "https://your-domain.com/logo.png",
   purpose: "Your Purpose",
@@ -68,8 +67,8 @@ mount(document.getElementById("zkpassport"), {
   // Enable dev mode here
   devMode: true,
   query: (queryBuilder) => queryBuilder.gte("age", 18).done(),
-  onResult: ({ verified, uniqueIdentifier }) => {
-    if (verified) console.log("Unique identifier", uniqueIdentifier);
+  onSuccess: ({ proofs, result }) => {
+    // Verify on your server with verify({ ..., devMode: true })
   },
 });
 ```

@@ -8,7 +8,39 @@ sidebar_position: 6
 
 This page documents all notable changes to ZKPassport SDK, particularly highlighting any breaking changes that developers should be aware of when upgrading.
 
-## v0.15.x - Latest release
+## v0.17.x - Latest release
+
+:::warning
+SDK 0.17.x requires version **1.4.0 or higher** of the ZKPassport mobile app. Older versions of the app can't complete requests made with SDK 0.17.x.
+:::
+
+### Breaking Changes
+
+- The scope of a policy-driven request is now the policy id (e.g. `pol_xyz`) instead of `<policy-id>:<version>`, so unique identifiers from policy-driven requests change once. A `scope` set on the request now takes precedence over the policy id.
+- `verify()` always checks the scope. If the request set a `scope` (or applied a policy), pass the same `scope` to `verify()`, otherwise verification fails.
+- The requested unique identifier type is enforced: proofs with a different type fail verification. Pass `uniqueIdentifierType` to `verify()` to enforce it on your server.
+- `.facematch()` without an argument now uses the `"strict"` mode. Pass `"regular"` to keep the faster check.
+
+### New Features
+
+- **Verify with ZKPassport button** — `VerifyWithZKPassport` (React) and `mountVerifyButton` (vanilla JS) from `@zkpassport/ui` open ZKPassport's hosted verification page in a popup. See the [Quick Start](./getting-started/quick-start).
+- `onSuccess` callback — receives the proofs and the result so you can verify them on your server. `onResult` is deprecated.
+- `NullifierType.NONE` — request proofs without a unique identifier.
+- Activity from policy-driven requests is attributed to the policy in the dashboard, even when the request sets its own scope.
+- `verify()` falls back to the ZKPassport verifier API when local verification fails. Use `verifierMode` to force `"local"` or `"api"`.
+
+## v0.16.x
+
+### New Features
+
+- Support for the updated proof verifier, with backwards compatibility for proofs from older versions of the app.
+- `.bind()` can now follow `.policy()`, so you can bind request-time values such as the user's wallet address to a policy-driven request.
+
+### Bug Fixes
+
+- Registry roots are validated as of the proof's date.
+
+## v0.15.x
 
 ### Breaking Changes
 
@@ -17,7 +49,7 @@ This page documents all notable changes to ZKPassport SDK, particularly highligh
 ### New Features
 
 - **Dashboard & policies** — manage your branding and verification request from the [ZKPassport Dashboard](https://dashboard.zkpassport.id) and apply it in code with `.policy("pol_xyz")`. See [Dashboard & Policies](./getting-started/policies).
-- **`@zkpassport/ui`** — a drop-in QR verification card for React (`ZKPassportQRCode`) and vanilla JS (`mount`). See the [Quick Start](./getting-started/quick-start).
+- **`@zkpassport/ui`** — drop-in verification UI for React and vanilla JS.
 - `onResult` now also provides the raw `proofs`, the `sdkInstance`, and the `uniqueIdentifierType`.
 - New `request()` options: `projectID`, `uniqueIdentifierType`, and `oprfKeyId` (salted unique identifiers, which require `.facematch("strict")`).
 

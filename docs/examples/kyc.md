@@ -14,15 +14,15 @@ Full KYC verification (excluding AML/CTF checks) is in theory possible with ZKPa
 
 ## Example of simple KYC
 
-Even if not fully compliant with KYC, you can use ZKPassport to verify a lot of useful information. This example uses the [`@zkpassport/ui`](../getting-started/quick-start) card.
+Even if not fully compliant with KYC, you can use ZKPassport to verify a lot of useful information. This example uses the [`@zkpassport/ui`](../getting-started/quick-start) verify button and verifies the proofs on your server.
 
 <Tabs groupId="framework">
 <TabItem value="react" label="React" default>
 
 ```tsx
-import { ZKPassportQRCode } from "@zkpassport/ui/react";
+import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
-<ZKPassportQRCode
+<VerifyWithZKPassport
   name="ZKPassport"
   logo="https://zkpassport.id/logo.png"
   purpose="Prove your identity"
@@ -43,7 +43,7 @@ import { ZKPassportQRCode } from "@zkpassport/ui/react";
       .facematch("strict")
       .done()
   }
-  onResult={handleResult}
+  onSuccess={sendToServer}
 />;
 ```
 
@@ -51,9 +51,9 @@ import { ZKPassportQRCode } from "@zkpassport/ui/react";
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mount } from "@zkpassport/ui";
+import { mountVerifyButton } from "@zkpassport/ui/button";
 
-mount(document.getElementById("zkpassport"), {
+mountVerifyButton(document.getElementById("zkpassport"), {
   name: "ZKPassport",
   logo: "https://zkpassport.id/logo.png",
   purpose: "Prove your identity",
@@ -68,20 +68,49 @@ mount(document.getElementById("zkpassport"), {
       .sanctions()
       .facematch("strict")
       .done(),
-  onResult: handleResult,
+  onSuccess: sendToServer,
 });
 ```
 
 </TabItem>
 </Tabs>
 
-Read the disclosed data and the FaceMatch / sanctions outcomes in the result handler:
+`sendToServer` sends the proofs and the result to your server:
 
 ```typescript
-function handleResult({ verified, result }) {
+async function sendToServer({ proofs, result }) {
+  const response = await fetch("/api/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ proofs, result }),
+  });
+  return (await response.json()).verified;
+}
+```
+
+On your server, recreate the query and verify the proofs (see [Quick Start](../getting-started/quick-start#verify-the-proofs-on-your-server)), then read the disclosed data and the FaceMatch / sanctions outcomes:
+
+```typescript
+async function handleResult({ proofs, result }) {
+  const { query } = zkPassport
+    .createQuery()
+    .disclose("nationality")
+    .disclose("birthdate")
+    .disclose("fullname")
+    .disclose("expiry_date")
+    .disclose("document_number")
+    .sanctions()
+    .facematch("strict")
+    .done();
+  const { verified } = await zkPassport.verify({
+    proofs,
+    originalQuery: query,
+    queryResult: result,
+    scope: "identity",
+  });
   if (!verified) {
     console.log("Verification failed");
-    return;
+    return { verified: false };
   }
   const nationality = result.nationality.disclose.result;
   const dateOfBirth = result.birthdate.disclose.result;
@@ -95,5 +124,6 @@ function handleResult({ verified, result }) {
   if (!sanctionsPassed) console.log("Sanctions check failed");
 
   console.log("User is verified", nationality, dateOfBirth, fullname, expiryDate, documentNumber);
+  return { verified: true };
 }
 ```

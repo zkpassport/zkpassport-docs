@@ -11,10 +11,10 @@ This guide covers the **self-served** flow: you describe your app and build the 
 
 There are two layers you can work with:
 
-- **[`@zkpassport/ui`](https://www.npmjs.com/package/@zkpassport/ui)** — the drop-in card that renders the QR code and manages the flow for you. This is the recommended starting point and what [Quick Start](./quick-start) uses.
-- **[`@zkpassport/sdk`](https://www.npmjs.com/package/@zkpassport/sdk)** — the underlying SDK (`request()`, the query builder, and the lifecycle callbacks). Use it directly when you want to build your own UI.
+- **[`@zkpassport/ui`](https://www.npmjs.com/package/@zkpassport/ui)** — the drop-in **Verify with ZKPassport** button, which opens ZKPassport's hosted verification page in a popup and manages the flow for you. This is the recommended starting point and what [Quick Start](./quick-start) uses.
+- **[`@zkpassport/sdk`](https://www.npmjs.com/package/@zkpassport/sdk)** — the underlying SDK (`request()`, the query builder, the lifecycle callbacks, and `verify()`). Use it directly when you want to build your own UI, and on your server to verify the proofs.
 
-Both share the exact same query builder and callbacks, so everything below applies whichever layer you use.
+Both share the same query builder and callbacks, so everything below applies whichever layer you use.
 
 ## Building your query
 
@@ -41,9 +41,9 @@ const query = (queryBuilder) =>
 
 `done()` finalizes the query. See the [API Reference](../api) for the full list of builder methods (`eq`, `gte`, `gt`, `lte`, `lt`, `range`, `in`, `out`, `disclose`, `bind`, `sanctions`, `facematch`).
 
-## Rendering the verification card
+## Rendering the verify button
 
-Pass your app details and the `query` callback to the card. All of the information below (except the scope) is displayed to the user in the ZKPassport app.
+Pass your app details and the `query` callback to the button. All of the information below (except the scope) is displayed to the user in the ZKPassport app.
 
 :::info
 The `scope` is an optional parameter that constrains the result's unique identifier (more on this [here](../examples/personhood)) to a specific use case. If omitted, it defaults to your domain.
@@ -53,12 +53,12 @@ The `scope` is an optional parameter that constrains the result's unique identif
 <TabItem value="react" label="React" default>
 
 ```tsx
-import { ZKPassportQRCode } from "@zkpassport/ui/react";
+import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 import { EU_COUNTRIES } from "@zkpassport/sdk";
 
 export default function VerifyPage() {
   return (
-    <ZKPassportQRCode
+    <VerifyWithZKPassport
       name="Your App Name"
       logo="https://your-domain.com/logo.png"
       purpose="Prove you are an adult from the EU but not from Scandinavia"
@@ -71,13 +71,14 @@ export default function VerifyPage() {
           .out("nationality", ["Sweden", "Denmark"])
           .done()
       }
-      onResult={({ verified, result, uniqueIdentifier }) => {
-        if (!verified) return;
-        console.log("firstname", result.firstname.disclose.result);
-        console.log("age over 18", result.age.gte.result);
-        console.log("nationality in EU", result.nationality.in.result);
-        console.log("nationality not from Scandinavia", result.nationality.out.result);
-        console.log("unique identifier", uniqueIdentifier);
+      onSuccess={async ({ proofs, result }) => {
+        // Verify the proofs on your server (see Quick Start)
+        const response = await fetch("/api/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ proofs, result }),
+        });
+        return (await response.json()).verified;
       }}
     />
   );
@@ -88,10 +89,10 @@ export default function VerifyPage() {
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mount } from "@zkpassport/ui";
+import { mountVerifyButton } from "@zkpassport/ui/button";
 import { EU_COUNTRIES } from "@zkpassport/sdk";
 
-const handle = mount(document.getElementById("zkpassport"), {
+const handle = mountVerifyButton(document.getElementById("zkpassport"), {
   name: "Your App Name",
   logo: "https://your-domain.com/logo.png",
   purpose: "Prove you are an adult from the EU but not from Scandinavia",
@@ -103,13 +104,14 @@ const handle = mount(document.getElementById("zkpassport"), {
       .in("nationality", EU_COUNTRIES)
       .out("nationality", ["Sweden", "Denmark"])
       .done(),
-  onResult: ({ verified, result, uniqueIdentifier }) => {
-    if (!verified) return;
-    console.log("firstname", result.firstname.disclose.result);
-    console.log("age over 18", result.age.gte.result);
-    console.log("nationality in EU", result.nationality.in.result);
-    console.log("nationality not from Scandinavia", result.nationality.out.result);
-    console.log("unique identifier", uniqueIdentifier);
+  onSuccess: async ({ proofs, result }) => {
+    // Verify the proofs on your server (see Quick Start)
+    const response = await fetch("/api/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proofs, result }),
+    });
+    return (await response.json()).verified;
   },
 });
 ```
@@ -117,11 +119,11 @@ const handle = mount(document.getElementById("zkpassport"), {
 </TabItem>
 </Tabs>
 
-The card takes the same options as `request()` as props (`name`, `logo`, `purpose`, `scope`, `mode`, `devMode`, `validity`, …) plus a `domain` and a `theme` (`"light"`, `"dark"`, or `"auto"`), and all of the lifecycle callbacks below.
+The button takes most `request()` options as props (`name`, `logo`, `purpose`, `scope`, `mode`, `devMode`, `validity`, …), display options such as `label`, `size`, and `theme` (`"light"`, `"dark"`, or `"auto"`), and the lifecycle callbacks below. It always uses the domain of the page it runs on. See the [API Reference](../api#zkpassportui-the-verify-button) for the full list.
 
 ## Handling the verification lifecycle
 
-The flow emits callbacks at each stage. With `@zkpassport/ui` you pass these as props/options; with the SDK directly you register them on the object returned by `done()`. They have the same signatures either way.
+The flow emits callbacks at each stage. With `@zkpassport/ui` you pass these as props/options; with the SDK directly you register them on the object returned by `done()`. They have the same signatures either way, except that the button's `onProofGenerated` only reports progress (`index`, `total`, `name`). The button also calls `onClose` when the user closes the popup before finishing.
 
 ### Request received
 
@@ -153,37 +155,32 @@ onProofGenerated(({ proof, vkeyHash, version, name }) => {
 });
 ```
 
-### Final result
+### Success
 
-The main callback. Triggered once all proofs have been generated and verified by the SDK. You get the results, whether everything verified successfully, and the unique identifier tied to the user's ID (see [Personhood](../examples/personhood)).
+The main callback. Triggered once all proofs have been generated. You get the raw `proofs` and the `result` of your query.
 
 :::warning
-If `verified` is `false`, you should not trust the results and `uniqueIdentifier` will be `undefined`. Check the console warnings to see which checks failed.
+The proofs aren't verified yet. Verify them on your server with [`verify()`](../api#verify) before trusting the result — see [Quick Start](./quick-start#verify-the-proofs-on-your-server). `verify()` also returns the unique identifier tied to the user's ID (see [Personhood](../examples/personhood)).
 :::
 
 ```typescript
-onResult(
-  ({ uniqueIdentifier, verified, result, proofs }) => {
-    // Access the verification results
-    console.log("firstname", result.firstname.disclose.result);
-    console.log("age over 18", result.age.gte.result);
-    console.log("nationality in EU", result.nationality.in.result);
-    console.log("nationality not from Scandinavia", result.nationality.out.result);
+onSuccess(({ proofs, result }) => {
+  // Access the query results
+  console.log("firstname", result.firstname.disclose.result);
+  console.log("age over 18", result.age.gte.result);
+  console.log("nationality in EU", result.nationality.in.result);
+  console.log("nationality not from Scandinavia", result.nationality.out.result);
 
-    // Access the original request parameters
-    console.log("age over", result.age.gte.expected);
+  // Access the original request parameters
+  console.log("age over", result.age.gte.expected);
 
-    // Verify proof validity and get the unique identifier
-    console.log("proofs are valid", verified);
-    console.log("unique identifier", uniqueIdentifier);
-
-    // `proofs` are the raw proofs — useful if you want to re-verify them server-side
-    // (see the Client-Server example)
-  }
-);
+  // Send the proofs and the result to your server to verify them
+});
 ```
 
-The `onResult` response also includes `uniqueIdentifierType`, the raw `proofs` array, and `sdkInstance` (the SDK instance that produced the result).
+With the button, your `onSuccess` handler decides the final state: return `false` (or throw) to show the error state, for example when your server rejects the proofs.
+
+`onResult` is deprecated in favor of `onSuccess`, and the button doesn't support it.
 
 ### Rejection and errors
 
@@ -192,7 +189,7 @@ onReject(() => console.log("User rejected the request"));
 onError((error) => console.log("Error during verification", error));
 ```
 
-And that's it! Use the `uniqueIdentifier` to identify the user in your database and the results to drive your logic. For more, see the [examples](../examples) section.
+And that's it! Use the `uniqueIdentifier` returned by `verify()` to identify the user in your database and the results to drive your logic. For more, see the [examples](../examples) section.
 
 ## Using the SDK directly
 
@@ -212,7 +209,7 @@ const queryBuilder = await zkPassport.request({
   scope: "eu-adult-not-scandinavia",
 });
 
-const { url, onResult, onRequestReceived, onError } = queryBuilder
+const { url, onSuccess, onRequestReceived, onError } = queryBuilder
   .disclose("firstname")
   .gte("age", 18)
   .in("nationality", EU_COUNTRIES)
@@ -223,8 +220,8 @@ const { url, onResult, onRequestReceived, onError } = queryBuilder
 // such as `qrcode`, or render it as a link if the user is on their phone:
 //   <a href={url}>Verify with ZKPassport</a>
 
-onResult(({ verified, result, uniqueIdentifier }) => {
-  if (verified) console.log("Verified", uniqueIdentifier);
+onSuccess(({ proofs, result }) => {
+  // Send the proofs and the result to your server and verify them there
 });
 ```
 

@@ -7,7 +7,7 @@ import TabItem from '@theme/TabItem';
 
 # Quick Start
 
-The fastest way to add ZKPassport to your app is the drop-in QR card from [`@zkpassport/ui`](https://www.npmjs.com/package/@zkpassport/ui). It renders the QR code, manages the whole verification flow (connecting, scanning, generating, retrying), and hands you the result. It works in React and in any vanilla JS / framework setup.
+The fastest way to add ZKPassport to your app is the **Verify with ZKPassport** button from [`@zkpassport/ui`](https://www.npmjs.com/package/@zkpassport/ui). Clicking it opens ZKPassport's hosted verification page in a popup, which guides the user through the verification with the ZKPassport app and hands the proofs back to your page. You then verify the proofs on your server with [`@zkpassport/sdk`](https://www.npmjs.com/package/@zkpassport/sdk). It works in React and in any vanilla JS / framework setup.
 
 ## Installation
 
@@ -19,31 +19,33 @@ npm install @zkpassport/sdk @zkpassport/ui
 
 No API key and no account are required to get started — just install the packages and you're good to go.
 
-## Add the verification card
+## Add the verify button
 
-The card takes your app details and a `query` callback where you describe what to verify. Below we verify the user is 18 or older. Everything else — the QR code, status transitions, and retry — is handled for you.
+The button takes your app details and a `query` callback where you describe what to verify. Below we verify the user is 18 or older. When the user is done, `onSuccess` receives the proofs and the result, which you send to your server to be verified.
 
 <Tabs groupId="framework">
 <TabItem value="react" label="React" default>
 
 ```tsx
-import { ZKPassportQRCode } from "@zkpassport/ui/react";
+import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
 export default function VerifyPage() {
   return (
-    <ZKPassportQRCode
+    <VerifyWithZKPassport
       name="Your App Name"
       logo="https://your-domain.com/logo.png"
       purpose="Prove you are 18+ years old"
       scope="adult"
       query={(queryBuilder) => queryBuilder.gte("age", 18).done()}
-      onResult={({ verified, result, uniqueIdentifier }) => {
-        if (verified) {
-          console.log("User is 18+", result.age.gte.result);
-          console.log("Unique identifier", uniqueIdentifier);
-        } else {
-          console.log("Verification failed");
-        }
+      onSuccess={async ({ proofs, result }) => {
+        const response = await fetch("/api/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ proofs, result }),
+        });
+        const { verified } = await response.json();
+        // Returning false shows the button's error state instead of success
+        return verified;
       }}
     />
   );
@@ -56,41 +58,74 @@ In the Next.js App Router, the React entry is marked `"use client"`, so import i
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mount } from "@zkpassport/ui";
+import { mountVerifyButton } from "@zkpassport/ui/button";
 
 // Renders into an existing element, e.g. <div id="zkpassport"></div>
-const handle = mount(document.getElementById("zkpassport"), {
+const handle = mountVerifyButton(document.getElementById("zkpassport"), {
   name: "Your App Name",
   logo: "https://your-domain.com/logo.png",
   purpose: "Prove you are 18+ years old",
   scope: "adult",
   query: (queryBuilder) => queryBuilder.gte("age", 18).done(),
-  onResult: ({ verified, result, uniqueIdentifier }) => {
-    if (verified) {
-      console.log("User is 18+", result.age.gte.result);
-      console.log("Unique identifier", uniqueIdentifier);
-    } else {
-      console.log("Verification failed");
-    }
+  onSuccess: async ({ proofs, result }) => {
+    const response = await fetch("/api/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proofs, result }),
+    });
+    const { verified } = await response.json();
+    // Returning false shows the button's error state instead of success
+    return verified;
   },
 });
 
 // handle.update(nextOptions) — swap options
-// handle.retry()             — rebuild the request
-// handle.unmount()           — tear it all down
+// handle.unmount()           — remove the button
 ```
 
-The vanilla `mount()` works the same in plain JS, Vue, Svelte, Solid, Astro, or any bundler-based stack.
+The vanilla `mountVerifyButton()` works the same in plain JS, Vue, Svelte, Solid, Astro, or any bundler-based stack.
 
 </TabItem>
 </Tabs>
 
-That's a complete, working verification flow. The `query` callback receives the SDK's query builder — chain any conditions you need and return `queryBuilder.done()`.
+The `query` callback receives the SDK's query builder — chain any conditions you need and return `queryBuilder.done()`.
+
+## Verify the proofs on your server
+
+On your server, recreate the same query with `createQuery()` and pass it to `verify()` along with the proofs, the result, and the scope you used. Create the `ZKPassport` instance with the domain of the page the button runs on.
+
+```ts
+import { ZKPassport } from "@zkpassport/sdk";
+
+const zkPassport = new ZKPassport("your-domain.com");
+
+// Call this from the route behind POST /api/verify with the request body
+export async function verifyProofs({ proofs, result }) {
+  // Recreate the query rather than accepting it from the browser
+  const { query } = zkPassport.createQuery().gte("age", 18).done();
+
+  const { verified, uniqueIdentifier } = await zkPassport.verify({
+    proofs,
+    originalQuery: query,
+    queryResult: result,
+    scope: "adult",
+  });
+
+  if (verified) {
+    console.log("User is 18+", result.age.gte.result);
+    // The same ID always gets the same identifier for your domain and scope
+    console.log("Unique identifier", uniqueIdentifier);
+  }
+  return { verified };
+}
+```
+
+That's a complete, working verification flow. See the [Client-Server example](../examples/client-server) for a full server.
 
 ## Where to go next
 
 - **[Basic Usage](./basic-usage)** — build richer queries, understand the full lifecycle callbacks, and drop down to the SDK directly when you need custom UI.
-- **[Dashboard & Policies](./policies)** — manage branding and the exact request from the [ZKPassport Dashboard](https://dashboard.zkpassport.id) and reference it with `.policy("pol_xyz")` instead of building the query in code.
+- **[Dashboard & Policies](./policies)** — manage branding and the exact request from the [ZKPassport Dashboard](https://dashboard.zkpassport.id) and reference it by its policy id instead of building the query in code.
 - **[Examples](../examples)** — age, nationality, residency, personhood, KYC, FaceMatch, and client-server verification.
 
 :::tip

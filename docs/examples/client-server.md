@@ -15,11 +15,12 @@ Implementing this pattern using serverless functions (e.g. Next.js API Routes) m
 
 ## What you send to the server
 
-To re-verify proofs server-side, the server needs three things, all available on the client:
+To verify proofs server-side, the server needs two things from the client, both provided on the `onSuccess` payload:
 
-- **`proofs`** — the raw proofs, provided on the `onResult` payload.
-- **`queryResult`** — the result object (`result` on the `onResult` payload).
-- **`query`** — the original query object. It's returned by `done()` as `query`, so capture it inside your `query` callback.
+- **`proofs`** — the raw proofs.
+- **`queryResult`** — the result object (`result` on the `onSuccess` payload).
+
+The server also needs the original query: recreate it there with `createQuery()` instead of taking it from the browser.
 
 ## Client-Side Implementation
 
@@ -27,8 +28,8 @@ To re-verify proofs server-side, the server needs three things, all available on
 <TabItem value="react" label="React" default>
 
 ```tsx
-import { ZKPassportQRCode } from "@zkpassport/ui/react";
-import { useRef, useState } from "react";
+import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
+import { useState } from "react";
 
 function RegistrationForm() {
   const [email, setEmail] = useState("");
@@ -36,34 +37,22 @@ function RegistrationForm() {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
 
-  // Capture the original query so we can send it to the server for verification
-  const queryRef = useRef(null);
-
   return (
     <div className="registration-form">
       <h2>Create an Account</h2>
       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
       <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
 
-      <ZKPassportQRCode
+      <VerifyWithZKPassport
         name="YourApp"
         logo="https://yourapp.com/logo.png"
         purpose="Account verification for registration"
         scope="registration"
-        query={(queryBuilder) => {
-          // In this example we verify the user is 18+ and disclose their nationality
-          const built = queryBuilder.gte("age", 18).disclose("nationality").done();
-          // Keep the query object — the server needs it as `originalQuery`
-          queryRef.current = built.query;
-          return built;
-        }}
+        // In this example we verify the user is 18+ and disclose their nationality
+        query={(queryBuilder) => queryBuilder.gte("age", 18).disclose("nationality").done()}
         onRequestReceived={() => setStatus("request_received")}
         onGeneratingProof={() => setStatus("generating_proof")}
-        onResult={async ({ verified, result: queryResult, proofs }) => {
-          if (!verified) {
-            setError("Verification failed on the client side");
-            return;
-          }
+        onSuccess={async ({ proofs, result: queryResult }) => {
           try {
             setStatus("sending_to_server");
             const response = await fetch("https://yourapi.com/register", {
@@ -72,11 +61,7 @@ function RegistrationForm() {
               body: JSON.stringify({
                 email,
                 password,
-                verification: {
-                  proofs,
-                  query: queryRef.current,
-                  queryResult,
-                },
+                verification: { proofs, queryResult },
               }),
             });
             const data = await response.json();
@@ -85,8 +70,11 @@ function RegistrationForm() {
             } else {
               setError(data.error || "Registration failed");
             }
+            // Returning false shows the button's error state
+            return data.success;
           } catch (err) {
             setError("Error communicating with server");
+            return false;
           }
         }}
         onReject={() => setError("Verification request was rejected")}
@@ -106,26 +94,15 @@ export default RegistrationForm;
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mount } from "@zkpassport/ui";
+import { mountVerifyButton } from "@zkpassport/ui/button";
 
-// Capture the original query so we can send it to the server for verification
-let originalQuery = null;
-
-mount(document.getElementById("zkpassport"), {
+mountVerifyButton(document.getElementById("zkpassport"), {
   name: "YourApp",
   logo: "https://yourapp.com/logo.png",
   purpose: "Account verification for registration",
   scope: "registration",
-  query: (queryBuilder) => {
-    const built = queryBuilder.gte("age", 18).disclose("nationality").done();
-    originalQuery = built.query; // the server needs this as `originalQuery`
-    return built;
-  },
-  onResult: async ({ verified, result: queryResult, proofs }) => {
-    if (!verified) {
-      console.error("Verification failed on the client side");
-      return;
-    }
+  query: (queryBuilder) => queryBuilder.gte("age", 18).disclose("nationality").done(),
+  onSuccess: async ({ proofs, result: queryResult }) => {
     const emailInput = document.getElementById("email");
     const passwordInput = document.getElementById("password");
     const response = await fetch("https://yourapi.com/register", {
@@ -134,11 +111,12 @@ mount(document.getElementById("zkpassport"), {
       body: JSON.stringify({
         email: emailInput.value,
         password: passwordInput.value,
-        verification: { proofs, query: originalQuery, queryResult },
+        verification: { proofs, queryResult },
       }),
     });
     const data = await response.json();
     console.log(data.success ? "Registered" : data.error);
+    return data.success;
   },
 });
 ```
@@ -148,7 +126,7 @@ mount(document.getElementById("zkpassport"), {
 
 ## Server-Side Implementation
 
-On the server, pass the `proofs`, the original `query` (as `originalQuery`), and the `queryResult` to `verify()`.
+On the server, recreate the original query and pass it to `verify()` (as `originalQuery`) along with the `proofs`, the `queryResult`, and the scope of the request.
 
 ```javascript
 // server.js (Node.js with Express)
@@ -164,7 +142,7 @@ app.post("/register", async (req, res) => {
   try {
     const { email, password, verification } = req.body;
 
-    if (!verification || !verification.proofs || !verification.query || !verification.queryResult) {
+    if (!verification || !verification.proofs || !verification.queryResult) {
       return res.status(400).json({
         success: false,
         error: "Missing ZKPassport verification data",
@@ -176,12 +154,16 @@ app.post("/register", async (req, res) => {
     // cannot skip it as it isn't auto-detected outside the browser.
     const zkPassport = new ZKPassport("your-domain.com");
 
+    // Recreate the same query as the client instead of accepting it from the request
+    const { query } = zkPassport.createQuery().gte("age", 18).disclose("nationality").done();
+
     // Verify the proofs
     const { verified, queryResultErrors, uniqueIdentifier } = await zkPassport.verify({
       proofs: verification.proofs,
-      // The original query object returned by done() on the client
-      originalQuery: verification.query,
+      originalQuery: query,
       queryResult: verification.queryResult,
+      // The same scope as the request
+      scope: "registration",
     });
 
     if (!verified) {
