@@ -95,5 +95,5 @@ console.log("User is between 18 and 25 years old", isBetween18And25);
 ```
 
 :::note
-Using the SDK directly, you can also express this with the `range` operator — `.range("age", 18, 25)`, read back as `result.age.range.result`. The button's `min`/`max` always map to `gte`/`lte`, so recreate it with those.
+The SDK also has a `range` operator, but the button's `min`/`max` always map to `gte`/`lte` — recreate them with those.
 :::

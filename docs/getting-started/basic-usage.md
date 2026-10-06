@@ -46,7 +46,7 @@ The shape is the same for every attribute:
 Whenever the button's query discloses anything, it also discloses `document_type` — that's what makes the other disclosed values decodable. Add `.disclose("document_type")` when you recreate the query on your server, or verification fails.
 :::
 
-Using the SDK directly, you chain the same conditions on a **query builder** instead:
+With the SDK, you chain the same conditions on a **query builder** instead:
 
 ```typescript
 const { query } = zkPassport

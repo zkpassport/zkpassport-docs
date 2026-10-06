@@ -26,8 +26,7 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
   service={{ scope: "france-resident" }}
   query={{
     issuing_country: { included: ["France"] },
-    // The button can't constrain the document type, so disclose it
-    // and check it when you verify the proofs
+    // Disclose the document type and check it on your server
     document_type: { disclose: true },
   }}
   onSuccess={async ({ proofs, result }) => {
@@ -53,8 +52,7 @@ mountVerifyButton(document.getElementById("zkpassport"), {
   service: { scope: "france-resident" },
   query: {
     issuing_country: { included: ["France"] },
-    // The button can't constrain the document type, so disclose it
-    // and check it when you verify the proofs
+    // Disclose the document type and check it on your server
     document_type: { disclose: true },
   },
   onSuccess: async ({ proofs, result }) => {
@@ -98,7 +96,7 @@ if (verified) {
 ```
 
 :::note
-Using the SDK directly, you can prove the document type without revealing it: `.eq("document_type", "residence_permit")`, read back as `result.document_type.eq.result`. The button's query only supports disclosing it.
+With the SDK you can prove the document type without revealing it — `.eq("document_type", "residence_permit")`. The button's query can only disclose it.
 :::
 
 ## Check EU residency

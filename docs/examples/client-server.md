@@ -150,8 +150,8 @@ app.post("/register", async (req, res) => {
     // cannot skip it as it isn't auto-detected outside the browser.
     const zkPassport = new ZKPassport("your-domain.com");
 
-    // Recreate the same query as the client instead of accepting it from the request.
-    // Disclosing anything also discloses the document type, so ask for it here too.
+    // Recreate the same query as the client instead of accepting it from the request
+    // Disclosing anything also discloses the document type, so ask for it here too
     const { query } = zkPassport
       .createQuery()
       .gte("age", 18)

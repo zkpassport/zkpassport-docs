@@ -52,11 +52,9 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
     age: { min: 18 },
   }}
   bind={{
-    // Bind the user's address to the proof
     account: "0x1234567890123456789012345678901234567890",
-    // Bind to the chain where the proof will be verified (1 is Ethereum mainnet)
+    // The chain where the proof will be verified (1 is Ethereum mainnet)
     chainId: 1,
-    // Bind custom data to the proof
     data: "my-custom-data",
   }}
   onSuccess={handleResult}

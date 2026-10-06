@@ -914,7 +914,7 @@ function VerifyWithZKPassport(
       status: "idle" | "in-progress" | "success" | "error";
       error: string | null;
       errorKind: ZKPassportErrorKind | null;
-      // This page's URL, set when the browser can't host the verification window
+      // Set when the browser can't host the verification window
       openInBrowserUrl: string | null;
       isLoading: boolean;
       verify: () => void;
@@ -1019,12 +1019,15 @@ When you recreate the query on your server for [`verify()`](#verify), use the bu
 `onError` receives a `ZKPassportError` rather than a plain message:
 
 ```typescript
+type ZKPassportErrorKind =
+  | "rejected" // Declined in the ZKPassport app
+  | "closed" // The window was closed before a result
+  | "bridge-lost" // The connection to the phone dropped
+  | "failed" // The app reported a failure, or the request couldn't be built
+  | "blocked"; // Pop-ups are blocked, or an in-app browser can't host the window
+
 class ZKPassportError extends Error {
-  // "rejected": declined in the app. "closed": the window was closed before a
-  // result. "bridge-lost": the connection to the phone dropped. "failed": the
-  // app reported a failure or the request could not be built. "blocked":
-  // pop-ups are blocked, or an in-app browser can't host the window.
-  kind: "rejected" | "closed" | "bridge-lost" | "failed" | "blocked";
+  kind: ZKPassportErrorKind;
   // True when the user simply did not finish ("rejected" or "closed")
   cancelled: boolean;
 }

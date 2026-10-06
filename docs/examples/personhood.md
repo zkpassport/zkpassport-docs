@@ -28,7 +28,6 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 <VerifyWithZKPassport
   purpose="Prove your personhood"
   service={{ scope: "personhood" }}
-  // An empty query asks for no information at all
   query={{}}
   onSuccess={async ({ proofs, result }) => {
     // Send the proofs to your server to verify them and register the user
@@ -51,7 +50,6 @@ import { mountVerifyButton } from "@zkpassport/ui/button";
 mountVerifyButton(document.getElementById("zkpassport"), {
   purpose: "Prove your personhood",
   service: { scope: "personhood" },
-  // An empty query asks for no information at all
   query: {},
   onSuccess: async ({ proofs, result }) => {
     // Send the proofs to your server to verify them and register the user

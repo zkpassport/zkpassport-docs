@@ -115,10 +115,6 @@ const nationality = result.nationality.disclose.result;
 console.log("User's nationality", nationality);
 ```
 
-:::note
-Whenever the button's query discloses anything, it also discloses `document_type` — that's what makes the other disclosed values decodable. Add `.disclose("document_type")` when you recreate the query on your server, or verification fails.
-:::
-
 ## Check the inclusion in a group of countries
 
 Check if the user is from a custom list of countries. The expected input is an array of country names or alpha-3 codes — the TypeScript autocomplete will help you with the valid values.
