@@ -31,7 +31,7 @@ Once enabled, mock IDs issued by the Zero Knowledge Republic (with different dat
 
 ## Enable Dev Mode in the SDK
 
-To enable dev mode, set `devMode` to `true`. Without it, proofs from mock passports are considered invalid. It's available both as a prop on the `@zkpassport/ui` button and as an option on `request()` when using the SDK directly. When you verify the proofs on your server, pass `devMode: true` to `verify()` as well.
+To enable dev mode, set `devMode` to `true`. Without it, proofs from mock passports are considered invalid. It's available under `service` on the `@zkpassport/ui` button and as an option on `request()` when using the SDK directly. When you verify the proofs on your server, pass `devMode: true` to `verify()` as well.
 
 <Tabs groupId="framework">
 <TabItem value="react" label="React" default>
@@ -40,13 +40,10 @@ To enable dev mode, set `devMode` to `true`. Without it, proofs from mock passpo
 import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
 <VerifyWithZKPassport
-  name="Your App Name"
-  logo="https://your-domain.com/logo.png"
   purpose="Your Purpose"
-  scope="your-scope"
   // Enable dev mode here
-  devMode
-  query={(queryBuilder) => queryBuilder.gte("age", 18).done()}
+  service={{ scope: "your-scope", devMode: true }}
+  query={{ age: { min: 18 } }}
   onSuccess={({ proofs, result }) => {
     // Verify on your server with verify({ ..., devMode: true })
   }}
@@ -60,13 +57,10 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 import { mountVerifyButton } from "@zkpassport/ui/button";
 
 mountVerifyButton(document.getElementById("zkpassport"), {
-  name: "Your App Name",
-  logo: "https://your-domain.com/logo.png",
   purpose: "Your Purpose",
-  scope: "your-scope",
   // Enable dev mode here
-  devMode: true,
-  query: (queryBuilder) => queryBuilder.gte("age", 18).done(),
+  service: { scope: "your-scope", devMode: true },
+  query: { age: { min: 18 } },
   onSuccess: ({ proofs, result }) => {
     // Verify on your server with verify({ ..., devMode: true })
   },

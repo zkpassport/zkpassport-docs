@@ -913,6 +913,9 @@ function VerifyWithZKPassport(
     children?: (verification: {
       status: "idle" | "in-progress" | "success" | "error";
       error: string | null;
+      errorKind: ZKPassportErrorKind | null;
+      // This page's URL, set when the browser can't host the verification window
+      openInBrowserUrl: string | null;
       isLoading: boolean;
       verify: () => void;
     }) => ReactNode;
@@ -939,49 +942,96 @@ type VerifyButtonHandle = {
 
 ```typescript
 type VerifyWithZKPassportOptions = {
-  // Request options, as on request()
-  name?: string;
-  logo?: string;
+  // Shown to the user in the ZKPassport app. Your app's name and logo come from
+  // your dashboard project for the domain the button runs on.
   purpose?: string;
-  scope?: string;
+  // The proof mode: "fast" (default), "compressed" or "compressed-evm"
   mode?: ProofMode;
-  devMode?: boolean;
-  validity?: number;
-  uniqueIdentifierType?: NullifierType.NON_SALTED | NullifierType.SALTED;
-  oprfKeyId?: string;
 
-  // Required: receives a QueryBuilder, applies gates, returns queryBuilder.done()
-  query: (queryBuilder: QueryBuilder) => QueryBuilderResult;
-  // Dashboard policy id, applied to the builder before `query` runs
+  // What to verify. A policy carries its own query, so pass one or the other.
+  query?: Query;
   policyId?: string;
 
-  // Button display
-  label?: string; // Defaults to "Verify with ZKPassport"
-  size?: "small" | "medium" | "large"; // Defaults to "medium"
-  theme?: "light" | "dark" | "auto"; // Defaults to "light"; "auto" follows the OS
-  showErrorMessage?: boolean; // Set to false to hide the error line and rely on onError
-  classes?: { root?: string; button?: string; error?: string };
-  windowMode?: "popup" | "tab"; // Defaults to "popup"
+  // What your service accepts, as opposed to what the query asks of the ID
+  service?: {
+    domain?: string; // Defaults to the domain of the page the button runs on
+    scope?: string; // Defaults to the policy id, then to the domain
+    uniqueIdentifierType?: "salted" | "non-salted" | "none";
+    validity?: number;
+    devMode?: boolean;
+  };
 
-  // Callbacks
-  onRequestReceived?: () => void;
-  onGeneratingProof?: () => void;
-  onProofGenerated?: (progress: { index?: number; total?: number; name?: string }) => void;
+  // Per-user data committed into the proof
+  bind?: {
+    account?: `0x${string}`;
+    chainId?: number;
+    data?: string;
+  };
+
+  // Button appearance; for finer control, use the --zkp-btn-* custom properties
+  style?: {
+    variant?: "filled" | "outline"; // Defaults to "filled"
+    label?: string; // Defaults to "Verify your identity"
+  };
+
+  // Point the flow at your own deployment of the services ZKPassport runs
+  overrides?: { bridgeUrl?: string; cloudProverUrl?: string };
+
   // Return false (or throw) to show the error state instead of success
   onSuccess?: (response: {
     proofs: ProofResult[];
     result: QueryResult;
   }) => void | boolean | Promise<void | boolean>;
-  onReject?: () => void;
-  onError?: (message: string) => void;
-  onClose?: () => void; // The user closed the popup before a result
+  onError?: (error: ZKPassportError) => void;
 };
 ```
 
 The proofs aren't verified in the browser — verify them on your server with [`verify()`](#verify).
 
+### The button's query
+
+The button describes the query as a plain object rather than with the SDK's query builder:
+
+```typescript
+type Query = {
+  // Bounds are inclusive, and dates are day-granular: "under 65" is { max: 64 }
+  age?: { min?: number; max?: number };
+  birthdate?: { min?: Date; max?: Date; disclose?: true };
+  expiry_date?: { min?: Date; max?: Date; disclose?: true };
+  // Country names or alpha-3 codes
+  nationality?: { included?: Country[]; excluded?: Country[]; disclose?: true };
+  issuing_country?: { included?: Country[]; excluded?: Country[]; disclose?: true };
+  document_type?: { disclose: true };
+  firstname?: { disclose: true };
+  lastname?: { disclose: true };
+  fullname?: { disclose: true };
+  gender?: { disclose: true };
+  document_number?: { disclose: true };
+  sanctions?: boolean; // true checks the strict lists
+  facematch?: true | { mode: "strict" | "regular" }; // true is the strict mode
+};
+```
+
+When you recreate the query on your server for [`verify()`](#verify), use the builder equivalents: `min`/`max` are `gte`/`lte`, `included`/`excluded` are `in`/`out`, and `sanctions: true` is `.sanctions("all", "all", { strict: true })`. Disclosing anything also discloses `document_type`, since it is what makes the other disclosed values decodable.
+
+### Errors
+
+`onError` receives a `ZKPassportError` rather than a plain message:
+
+```typescript
+class ZKPassportError extends Error {
+  // "rejected": declined in the app. "closed": the window was closed before a
+  // result. "bridge-lost": the connection to the phone dropped. "failed": the
+  // app reported a failure or the request could not be built. "blocked":
+  // pop-ups are blocked, or an in-app browser can't host the window.
+  kind: "rejected" | "closed" | "bridge-lost" | "failed" | "blocked";
+  // True when the user simply did not finish ("rejected" or "closed")
+  cancelled: boolean;
+}
+```
+
 :::note
 The button's styles are injected as a `<style>` tag. To restyle it, set the `--zkp-btn-*` CSS custom properties (for example `--zkp-btn-bg`, `--zkp-btn-fg`, `--zkp-btn-radius` or `--zkp-btn-font-size`) on the mount element or any ancestor, or pass a function as `children` to render your own trigger.
 :::
 
-To apply a dashboard policy, pass its id as `policyId` and return `queryBuilder.done()` from the `query` callback. See [Dashboard & Policies](./getting-started/policies).
+To apply a dashboard policy, pass its id as `policyId` and omit `query` — the policy carries its own. See [Dashboard & Policies](./getting-started/policies).

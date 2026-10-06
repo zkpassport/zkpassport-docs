@@ -14,39 +14,58 @@ There are two layers you can work with:
 - **[`@zkpassport/ui`](https://www.npmjs.com/package/@zkpassport/ui)** — the drop-in **Verify with ZKPassport** button, which opens ZKPassport's hosted verification page in a popup and manages the flow for you. This is the recommended starting point and what [Quick Start](./quick-start) uses.
 - **[`@zkpassport/sdk`](https://www.npmjs.com/package/@zkpassport/sdk)** — the underlying SDK (`request()`, the query builder, the lifecycle callbacks, and `verify()`). Use it directly when you want to build your own UI, and on your server to verify the proofs.
 
-Both share the same query builder and callbacks, so everything below applies whichever layer you use.
+The two layers describe the query differently: the button takes a plain object, the SDK takes a chainable builder. Both are shown below.
 
 ## Building your query
 
-Inside the `query` callback you receive a **query builder** and chain the attributes or conditions you want to verify. In this example we disclose the user's firstname, verify they are over 18, and that they are an EU citizen but not from Scandinavia.
+With the button, `query` is a plain object — one entry per attribute. In this example we disclose the user's firstname, verify they are over 18, and that they are an EU citizen but not from Scandinavia.
 
 ```typescript
 import { EU_COUNTRIES } from "@zkpassport/sdk";
 
-const query = (queryBuilder) =>
-  queryBuilder
-    // Disclose the user's firstname
-    .disclose("firstname")
-    // Verify the user's age is greater than or equal to 18
-    .gte("age", 18)
-    // Verify the user's nationality is in the European Union
-    // EU_COUNTRIES is a constant exported by the SDK containing all the EU countries
-    .in("nationality", EU_COUNTRIES)
-    // Verify the user's nationality is not from a Scandinavian country
-    // Note: Norway is not an EU country
-    .out("nationality", ["Sweden", "Denmark"])
-    // Finalize the query
-    .done();
+const query = {
+  // Disclose the user's firstname
+  firstname: { disclose: true },
+  // Verify the user's age is greater than or equal to 18
+  age: { min: 18 },
+  // EU_COUNTRIES is a constant exported by the SDK containing all the EU countries,
+  // and Scandinavian countries are excluded (note: Norway is not an EU country)
+  nationality: { included: EU_COUNTRIES, excluded: ["Sweden", "Denmark"] },
+};
 ```
 
-`done()` finalizes the query. See the [API Reference](../api) for the full list of builder methods (`eq`, `gte`, `gt`, `lte`, `lt`, `range`, `in`, `out`, `disclose`, `bind`, `sanctions`, `facematch`).
+The shape is the same for every attribute:
+
+- **`min` / `max`** — inclusive bounds, on `age`, `birthdate` and `expiry_date`. Dates are day-granular, so "under 65" is `{ max: 64 }` and "born before 2007" is `{ max: new Date("2006-12-31") }`.
+- **`included` / `excluded`** — country sets, on `nationality` and `issuing_country`. Both accept country names or alpha-3 codes.
+- **`disclose: true`** — reveal the value. Available on `firstname`, `lastname`, `fullname`, `gender`, `document_number`, `document_type`, `birthdate`, `expiry_date`, `nationality` and `issuing_country`.
+- **`sanctions: true`** — check the user against the available sanctions lists.
+- **`facematch: true`** (or `{ mode: "regular" }`) — verify the person generating the proof is the one on the ID.
+
+:::note
+Whenever the button's query discloses anything, it also discloses `document_type` — that's what makes the other disclosed values decodable. Add `.disclose("document_type")` when you recreate the query on your server, or verification fails.
+:::
+
+Using the SDK directly, you chain the same conditions on a **query builder** instead:
+
+```typescript
+const { query } = zkPassport
+  .createQuery()
+  .disclose("firstname")
+  .gte("age", 18)
+  .in("nationality", EU_COUNTRIES)
+  .out("nationality", ["Sweden", "Denmark"])
+  .done();
+```
+
+`done()` finalizes the query. The builder is also what you use on your server to recreate the query for `verify()`. See the [API Reference](../api) for the full list of builder methods (`eq`, `gte`, `gt`, `lte`, `lt`, `range`, `in`, `out`, `disclose`, `bind`, `sanctions`, `facematch`); the button's object covers the common subset of these.
 
 ## Rendering the verify button
 
-Pass your app details and the `query` callback to the button. All of the information below (except the scope) is displayed to the user in the ZKPassport app.
+Pass the `purpose` and the `query` to the button. The purpose is displayed to the user in the ZKPassport app, alongside your app's name and logo, which come from your [dashboard](https://dashboard.zkpassport.id) project for the domain the button runs on.
 
 :::info
-The `scope` is an optional parameter that constrains the result's unique identifier (more on this [here](../examples/personhood)) to a specific use case. If omitted, it defaults to your domain.
+The `scope` goes under `service` and is optional. It constrains the result's unique identifier (more on this [here](../examples/personhood)) to a specific use case; if omitted, it defaults to your domain.
 :::
 
 <Tabs groupId="framework">
@@ -59,18 +78,13 @@ import { EU_COUNTRIES } from "@zkpassport/sdk";
 export default function VerifyPage() {
   return (
     <VerifyWithZKPassport
-      name="Your App Name"
-      logo="https://your-domain.com/logo.png"
       purpose="Prove you are an adult from the EU but not from Scandinavia"
-      scope="eu-adult-not-scandinavia"
-      query={(queryBuilder) =>
-        queryBuilder
-          .disclose("firstname")
-          .gte("age", 18)
-          .in("nationality", EU_COUNTRIES)
-          .out("nationality", ["Sweden", "Denmark"])
-          .done()
-      }
+      service={{ scope: "eu-adult-not-scandinavia" }}
+      query={{
+        firstname: { disclose: true },
+        age: { min: 18 },
+        nationality: { included: EU_COUNTRIES, excluded: ["Sweden", "Denmark"] },
+      }}
       onSuccess={async ({ proofs, result }) => {
         // Verify the proofs on your server (see Quick Start)
         const response = await fetch("/api/verify", {
@@ -93,17 +107,13 @@ import { mountVerifyButton } from "@zkpassport/ui/button";
 import { EU_COUNTRIES } from "@zkpassport/sdk";
 
 const handle = mountVerifyButton(document.getElementById("zkpassport"), {
-  name: "Your App Name",
-  logo: "https://your-domain.com/logo.png",
   purpose: "Prove you are an adult from the EU but not from Scandinavia",
-  scope: "eu-adult-not-scandinavia",
-  query: (queryBuilder) =>
-    queryBuilder
-      .disclose("firstname")
-      .gte("age", 18)
-      .in("nationality", EU_COUNTRIES)
-      .out("nationality", ["Sweden", "Denmark"])
-      .done(),
+  service: { scope: "eu-adult-not-scandinavia" },
+  query: {
+    firstname: { disclose: true },
+    age: { min: 18 },
+    nationality: { included: EU_COUNTRIES, excluded: ["Sweden", "Denmark"] },
+  },
   onSuccess: async ({ proofs, result }) => {
     // Verify the proofs on your server (see Quick Start)
     const response = await fetch("/api/verify", {
@@ -119,13 +129,13 @@ const handle = mountVerifyButton(document.getElementById("zkpassport"), {
 </TabItem>
 </Tabs>
 
-The button takes most `request()` options as props (`name`, `logo`, `purpose`, `scope`, `mode`, `devMode`, `validity`, …), display options such as `label`, `size`, and `theme` (`"light"`, `"dark"`, or `"auto"`), and the lifecycle callbacks below. It always uses the domain of the page it runs on. See the [API Reference](../api#zkpassportui-the-verify-button) for the full list.
+Alongside `purpose` and `query`, the button takes what your service accepts under `service` (`scope`, `devMode`, `validity`, `uniqueIdentifierType`), per-user values to commit into the proof under `bind`, and the button's own appearance under `style` (`variant: "filled" | "outline"` and `label`). It always uses the domain of the page it runs on. See the [API Reference](../api#zkpassportui-the-verify-button) for the full list.
 
 ## Handling the verification lifecycle
 
-The flow emits callbacks at each stage. With `@zkpassport/ui` you pass these as props/options; with the SDK directly you register them on the object returned by `done()`. They have the same signatures either way, except that the button's `onProofGenerated` only reports progress (`index`, `total`, `name`). The button also calls `onClose` when the user closes the popup before finishing.
+The flow emits callbacks at each stage. With the SDK you register them on the object returned by `done()`. The button reports the intermediate stages in its own UI, so it takes only the two terminal callbacks: `onSuccess` and `onError`.
 
-### Request received
+### Request received (SDK)
 
 Triggered when the user has scanned the QR code (or clicked the link) and now sees the request popup on their device with your app details and the attributes you requested.
 
@@ -135,7 +145,7 @@ onRequestReceived(() => {
 });
 ```
 
-### Proof generation started
+### Proof generation started (SDK)
 
 Triggered when the user has accepted the request and the proof is being generated. Expect this to take up to ~10 seconds on a decent connection.
 
@@ -145,7 +155,7 @@ onGeneratingProof(() => {
 });
 ```
 
-### Individual proof generated
+### Individual proof generated (SDK)
 
 Triggered each time one of the underlying proofs is generated. You usually don't need this — expect at least 4 proofs, sometimes more depending on what you requested.
 
@@ -184,9 +194,20 @@ With the button, your `onSuccess` handler decides the final state: return `false
 
 ### Rejection and errors
 
+With the SDK, a rejection and an error are separate callbacks:
+
 ```typescript
 onReject(() => console.log("User rejected the request"));
-onError((error) => console.log("Error during verification", error));
+onError((message) => console.log("Error during verification", message));
+```
+
+The button folds both into `onError`, which receives a `ZKPassportError`. Its `kind` says what happened (`"rejected"`, `"closed"`, `"bridge-lost"`, `"failed"` or `"blocked"`), and `cancelled` is true when the user simply didn't finish — handy for keeping those out of your error reporting:
+
+```typescript
+onError((error) => {
+  if (error.cancelled) return; // the user declined or closed the window
+  console.log("Verification failed", error.kind, error.message);
+});
 ```
 
 And that's it! Use the `uniqueIdentifier` returned by `verify()` to identify the user in your database and the results to drive your logic. For more, see the [examples](../examples) section.
@@ -232,6 +253,8 @@ onSuccess(({ proofs, result }) => {
 - **`mode`** — the proof mode: `"fast"` (default), `"compressed"`, or `"compressed-evm"` (required for [onchain verification](./onchain)).
 - **`validity`** — how many seconds ago the proof checking the ID's expiry date may have been generated. Defaults to 7 days.
 - **`devMode`** — accept mock proofs from the dev-mode passports. See [Dev Mode](./dev-mode).
-- **`uniqueIdentifierType`** / **`oprfKeyId`** — opt into a salted unique identifier. A salted identifier requires `.facematch("strict")` in the query. See [Salted Unique Identifiers (OPRF)](../examples/salted-identifiers).
+- **`uniqueIdentifierType`** / **`oprfKeyId`** — opt into a salted unique identifier. A salted identifier requires strict [FaceMatch](../examples/facematch) in the query. See [Salted Unique Identifiers (OPRF)](../examples/salted-identifiers).
+
+On the button, `devMode`, `validity` and `uniqueIdentifierType` go under `service`; `mode` stays a top-level option.
 
 See the [API Reference](../api) for the complete list and exact types.

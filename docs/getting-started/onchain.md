@@ -33,7 +33,7 @@ ZKPassport maintains a deployed [`ZKPassportVerifier`](https://etherscan.io/addr
 
 ### 1. Build your query for onchain verification
 
-To verify proofs on EVM chains, set `mode` to `"compressed-evm"`. Bind the user's address (and optionally the chain and custom data) so the proof is tied to the on-chain transaction.
+To verify proofs on EVM chains, set `mode` to `"compressed-evm"`. Bind the user's address (and optionally the chain and custom data) so the proof is tied to the on-chain transaction. The button takes these as a `bind` object; the SDK takes them as `.bind()` calls on the query builder.
 
 <Tabs groupId="framework">
 <TabItem value="react" label="React" default>
@@ -42,25 +42,23 @@ To verify proofs on EVM chains, set `mode` to `"compressed-evm"`. Bind the user'
 import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
 <VerifyWithZKPassport
-  name="Your App Name"
-  logo="https://your-domain.com/logo.png"
   purpose="Doing something"
-  scope="my-scope"
+  service={{ scope: "my-scope" }}
   // To verify proofs on EVM chains, you need to set the mode to "compressed-evm"
   mode="compressed-evm"
-  query={(queryBuilder) =>
-    queryBuilder
-      .disclose("nationality")
-      .disclose("document_type")
-      .gte("age", 18)
-      // Bind the user's address to the proof
-      .bind("user_address", "0x1234567890123456789012345678901234567890")
-      // Bind to the chain where the proof will be verified
-      .bind("chain", "ethereum")
-      // Bind custom data to the proof
-      .bind("custom_data", "my-custom-data")
-      .done()
-  }
+  query={{
+    nationality: { disclose: true },
+    document_type: { disclose: true },
+    age: { min: 18 },
+  }}
+  bind={{
+    // Bind the user's address to the proof
+    account: "0x1234567890123456789012345678901234567890",
+    // Bind to the chain where the proof will be verified (1 is Ethereum mainnet)
+    chainId: 1,
+    // Bind custom data to the proof
+    data: "my-custom-data",
+  }}
   onSuccess={handleResult}
 />;
 ```

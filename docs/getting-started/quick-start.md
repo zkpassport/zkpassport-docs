@@ -17,11 +17,11 @@ Install the UI package alongside the SDK using npm (or any JavaScript package ma
 npm install @zkpassport/sdk @zkpassport/ui
 ```
 
-No API key and no account are required to get started — just install the packages and you're good to go.
+No API key and no account are required to get started — just install the packages and you're good to go. Your app's name and logo come from your [dashboard](https://dashboard.zkpassport.id) project; until you register your domain, the ZKPassport app shows the domain itself.
 
 ## Add the verify button
 
-The button takes your app details and a `query` callback where you describe what to verify. Below we verify the user is 18 or older. When the user is done, `onSuccess` receives the proofs and the result, which you send to your server to be verified.
+The button takes a `purpose` to show the user and a `query` describing what to verify. Below we verify the user is 18 or older. When the user is done, `onSuccess` receives the proofs and the result, which you send to your server to be verified.
 
 <Tabs groupId="framework">
 <TabItem value="react" label="React" default>
@@ -32,11 +32,9 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 export default function VerifyPage() {
   return (
     <VerifyWithZKPassport
-      name="Your App Name"
-      logo="https://your-domain.com/logo.png"
       purpose="Prove you are 18+ years old"
-      scope="adult"
-      query={(queryBuilder) => queryBuilder.gte("age", 18).done()}
+      service={{ scope: "adult" }}
+      query={{ age: { min: 18 } }}
       onSuccess={async ({ proofs, result }) => {
         const response = await fetch("/api/verify", {
           method: "POST",
@@ -62,11 +60,9 @@ import { mountVerifyButton } from "@zkpassport/ui/button";
 
 // Renders into an existing element, e.g. <div id="zkpassport"></div>
 const handle = mountVerifyButton(document.getElementById("zkpassport"), {
-  name: "Your App Name",
-  logo: "https://your-domain.com/logo.png",
   purpose: "Prove you are 18+ years old",
-  scope: "adult",
-  query: (queryBuilder) => queryBuilder.gte("age", 18).done(),
+  service: { scope: "adult" },
+  query: { age: { min: 18 } },
   onSuccess: async ({ proofs, result }) => {
     const response = await fetch("/api/verify", {
       method: "POST",
@@ -88,7 +84,7 @@ The vanilla `mountVerifyButton()` works the same in plain JS, Vue, Svelte, Solid
 </TabItem>
 </Tabs>
 
-The `query` callback receives the SDK's query builder — chain any conditions you need and return `queryBuilder.done()`.
+The `query` is a plain object: one entry per attribute, with `min`/`max` for bounds, `included`/`excluded` for country sets, and `disclose: true` to reveal a value. See [Basic Usage](./basic-usage#building-your-query) for the full shape.
 
 ## Verify the proofs on your server
 

@@ -33,7 +33,6 @@ export default function VerifyPage() {
   return (
     <VerifyWithZKPassport
       policyId="pol_xyz"
-      query={(queryBuilder) => queryBuilder.done()}
       onSuccess={({ proofs, result }) => {
         // Send the proofs and the result to your server and verify them there
       }}
@@ -50,7 +49,6 @@ import { mountVerifyButton } from "@zkpassport/ui/button";
 
 mountVerifyButton(document.getElementById("zkpassport"), {
   policyId: "pol_xyz",
-  query: (queryBuilder) => queryBuilder.done(),
   onSuccess: ({ proofs, result }) => {
     // Send the proofs and the result to your server and verify them there
   },
@@ -93,6 +91,6 @@ queryBuilder.policy("pol_xyz").done(); // ✅
 queryBuilder.policy("pol_xyz").bind("user_address", address).done(); // ✅ .bind() may follow
 ```
 
-With the button's `policyId`, the policy is already applied to the builder your `query` callback receives, so return `queryBuilder.done()`, optionally after `.bind()`.
+A policy carries its own query, so the button takes `policyId` **or** `query`, never both — passing both is an error. Bound values still apply: add them with the button's `bind` option.
 
 If the domain isn't registered or the id doesn't match a policy, `.policy()` throws with a clear message — register the domain (or check the id) in the dashboard, or fall back to the [self-served flow](./basic-usage).
