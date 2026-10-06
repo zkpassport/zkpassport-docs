@@ -26,11 +26,9 @@ To have a proof of unique ID, simply initiate a request with no information disc
 import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
 <VerifyWithZKPassport
-  name="ZKPassport"
-  logo="https://zkpassport.id/logo.png"
   purpose="Prove your personhood"
-  scope="personhood"
-  query={(queryBuilder) => queryBuilder.done()}
+  service={{ scope: "personhood" }}
+  query={{}}
   onSuccess={async ({ proofs, result }) => {
     // Send the proofs to your server to verify them and register the user
     const response = await fetch("/api/register", {
@@ -50,11 +48,9 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 import { mountVerifyButton } from "@zkpassport/ui/button";
 
 mountVerifyButton(document.getElementById("zkpassport"), {
-  name: "ZKPassport",
-  logo: "https://zkpassport.id/logo.png",
   purpose: "Prove your personhood",
-  scope: "personhood",
-  query: (queryBuilder) => queryBuilder.done(),
+  service: { scope: "personhood" },
+  query: {},
   onSuccess: async ({ proofs, result }) => {
     // Send the proofs to your server to verify them and register the user
     const response = await fetch("/api/register", {

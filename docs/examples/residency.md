@@ -22,13 +22,13 @@ Check if the user is resident of a specific country. France is used as an exampl
 import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
 <VerifyWithZKPassport
-  name="ZKPassport"
-  logo="https://zkpassport.id/logo.png"
   purpose="Prove you are resident in France"
-  scope="france-resident"
-  query={(queryBuilder) =>
-    queryBuilder.eq("document_type", "residence_permit").eq("issuing_country", "France").done()
-  }
+  service={{ scope: "france-resident" }}
+  query={{
+    issuing_country: { included: ["France"] },
+    // Disclose the document type and check it on your server
+    document_type: { disclose: true },
+  }}
   onSuccess={async ({ proofs, result }) => {
     // Send the proofs to your server to verify them
     const response = await fetch("/api/verify", {
@@ -48,12 +48,13 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 import { mountVerifyButton } from "@zkpassport/ui/button";
 
 mountVerifyButton(document.getElementById("zkpassport"), {
-  name: "ZKPassport",
-  logo: "https://zkpassport.id/logo.png",
   purpose: "Prove you are resident in France",
-  scope: "france-resident",
-  query: (queryBuilder) =>
-    queryBuilder.eq("document_type", "residence_permit").eq("issuing_country", "France").done(),
+  service: { scope: "france-resident" },
+  query: {
+    issuing_country: { included: ["France"] },
+    // Disclose the document type and check it on your server
+    document_type: { disclose: true },
+  },
   onSuccess: async ({ proofs, result }) => {
     // Send the proofs to your server to verify them
     const response = await fetch("/api/verify", {
@@ -74,8 +75,8 @@ On your server, recreate the query and verify the proofs (see [Quick Start](../g
 ```typescript
 const { query } = zkPassport
   .createQuery()
-  .eq("document_type", "residence_permit")
-  .eq("issuing_country", "France")
+  .in("issuing_country", ["France"])
+  .disclose("document_type")
   .done();
 const { verified } = await zkPassport.verify({
   proofs,
@@ -85,12 +86,18 @@ const { verified } = await zkPassport.verify({
 });
 
 if (verified) {
-  const isResidentInFrance = result.document_type.eq.result && result.issuing_country.eq.result;
+  const isResidentInFrance =
+    result.issuing_country.in.result &&
+    result.document_type.disclose.result === "residence_permit";
   console.log("User is resident in France", isResidentInFrance);
 } else {
   console.log("Verification failed");
 }
 ```
+
+:::note
+With the SDK you can prove the document type without revealing it — `.eq("document_type", "residence_permit")`. The button's query can only disclose it.
+:::
 
 ## Check EU residency
 
@@ -99,10 +106,14 @@ Check if the user is resident of a group of countries. EU is used as an example 
 ```typescript
 import { EU_COUNTRIES } from "@zkpassport/sdk";
 
-const query = (queryBuilder) =>
-  queryBuilder.eq("document_type", "residence_permit").in("issuing_country", EU_COUNTRIES).done();
+const query = {
+  issuing_country: { included: EU_COUNTRIES },
+  document_type: { disclose: true },
+};
+// On your server: .in("issuing_country", EU_COUNTRIES).disclose("document_type")
 
-// On your server, once verify() succeeds
-const isEUResident = result.document_type.eq.result && result.issuing_country.in.result;
+// Once verify() succeeds
+const isEUResident =
+  result.issuing_country.in.result && result.document_type.disclose.result === "residence_permit";
 console.log("User is resident in EU", isEUResident);
 ```

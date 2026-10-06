@@ -8,7 +8,28 @@ sidebar_position: 6
 
 This page documents all notable changes to ZKPassport SDK, particularly highlighting any breaking changes that developers should be aware of when upgrading.
 
-## v0.17.x - Latest release
+## v0.18.x - Latest release
+
+### Breaking Changes
+
+The **Verify with ZKPassport** button from `@zkpassport/ui` has a new option shape. The `@zkpassport/ui` QR code card (`ZKPassportQRCode` / `mount`) and the SDK's `request()` are unchanged.
+
+- `query` is now a plain object instead of a query-builder callback — `{ age: { min: 18 } }` rather than `(queryBuilder) => queryBuilder.gte("age", 18).done()`. See [Basic Usage](./getting-started/basic-usage#building-your-query) for the full shape.
+- `name` and `logo` are no longer options. Your app's name and logo come from your [dashboard](https://dashboard.zkpassport.id) project for the domain the button runs on; an unregistered domain shows the domain itself.
+- `scope`, `devMode`, `validity` and `uniqueIdentifierType` moved under `service`, and `uniqueIdentifierType` is now `"salted" | "non-salted" | "none"`. `purpose`, `mode`, `query` and `policyId` stay top-level.
+- Values bound into the proof moved from `.bind()` calls in the query to a `bind` option: `{ account, chainId, data }`.
+- `policyId` and `query` are now mutually exclusive — a policy carries its own query.
+- The button takes only two callbacks, `onSuccess` and `onError`. `onReject` and `onClose` are folded into `onError`, which now receives a `ZKPassportError` carrying a `kind` and a `cancelled` flag. `onRequestReceived`, `onGeneratingProof` and `onProofGenerated` are gone — the button shows that progress itself.
+- `label` moved under `style`, alongside a new `variant` (`"filled"` or `"outline"`). `size`, `theme`, `classes`, `showErrorMessage` and `windowMode` are gone; restyle with the `--zkp-btn-*` CSS custom properties. The default label is now "Verify your identity".
+- `popupUrl`, `bridgeUrl` and `cloudProverUrl` moved under `overrides`.
+- Credential minting is now `mint: true` with an on-chain `policyId` (`eip155:<chainId>:0x…`) and `bind: { account, chainId }`, replacing `mintCredential`.
+
+### New Features
+
+- `verify()` and `request()` accept a `config` option with an `rpcUrl`, so local verification can read the registry roots through your own Ethereum RPC instead of the built-in endpoint.
+- Proofs and registry roots are checked on the chain the query binds to, rather than always on Ethereum (or Sepolia in dev mode).
+
+## v0.17.x
 
 :::warning
 SDK 0.17.x requires version **1.4.0 or higher** of the ZKPassport mobile app. Older versions of the app can't complete requests made with SDK 0.17.x.

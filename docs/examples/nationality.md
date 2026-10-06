@@ -25,11 +25,9 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 import { EU_COUNTRIES } from "@zkpassport/sdk";
 
 <VerifyWithZKPassport
-  name="ZKPassport"
-  logo="https://zkpassport.id/logo.png"
   purpose="Prove you are a citizen of the European Union"
-  scope="eu-citizen"
-  query={(queryBuilder) => queryBuilder.in("nationality", EU_COUNTRIES).done()}
+  service={{ scope: "eu-citizen" }}
+  query={{ nationality: { included: EU_COUNTRIES } }}
   onSuccess={async ({ proofs, result }) => {
     // Send the proofs to your server to verify them
     const response = await fetch("/api/verify", {
@@ -50,11 +48,9 @@ import { mountVerifyButton } from "@zkpassport/ui/button";
 import { EU_COUNTRIES } from "@zkpassport/sdk";
 
 mountVerifyButton(document.getElementById("zkpassport"), {
-  name: "ZKPassport",
-  logo: "https://zkpassport.id/logo.png",
   purpose: "Prove you are a citizen of the European Union",
-  scope: "eu-citizen",
-  query: (queryBuilder) => queryBuilder.in("nationality", EU_COUNTRIES).done(),
+  service: { scope: "eu-citizen" },
+  query: { nationality: { included: EU_COUNTRIES } },
   onSuccess: async ({ proofs, result }) => {
     // Send the proofs to your server to verify them
     const response = await fetch("/api/verify", {
@@ -98,9 +94,10 @@ Check if the user is not from a list of countries — a common use case is exclu
 ```typescript
 import { SANCTIONED_COUNTRIES } from "@zkpassport/sdk";
 
-const query = (queryBuilder) => queryBuilder.out("nationality", SANCTIONED_COUNTRIES).done();
+const query = { nationality: { excluded: SANCTIONED_COUNTRIES } };
+// On your server: .out("nationality", SANCTIONED_COUNTRIES)
 
-// On your server, once verify() succeeds
+// Once verify() succeeds
 const isNotFromSanctionedCountry = result.nationality.out.result;
 console.log("User is not from a sanctioned country", isNotFromSanctionedCountry);
 ```
@@ -110,9 +107,10 @@ console.log("User is not from a sanctioned country", isNotFromSanctionedCountry)
 Disclose the user's actual nationality.
 
 ```typescript
-const query = (queryBuilder) => queryBuilder.disclose("nationality").done();
+const query = { nationality: { disclose: true } };
+// On your server: .disclose("nationality").disclose("document_type")
 
-// On your server, once verify() succeeds
+// Once verify() succeeds
 const nationality = result.nationality.disclose.result;
 console.log("User's nationality", nationality);
 ```
@@ -122,10 +120,10 @@ console.log("User's nationality", nationality);
 Check if the user is from a custom list of countries. The expected input is an array of country names or alpha-3 codes — the TypeScript autocomplete will help you with the valid values.
 
 ```typescript
-const query = (queryBuilder) =>
-  queryBuilder.in("nationality", ["France", "Germany", "United Kingdom"]).done();
+const query = { nationality: { included: ["France", "Germany", "United Kingdom"] } };
+// On your server: .in("nationality", ["France", "Germany", "United Kingdom"])
 
-// On your server, once verify() succeeds
+// Once verify() succeeds
 const isFromList = result.nationality.in.result;
 console.log("User is from France, Germany or the United Kingdom", isFromList);
 ```

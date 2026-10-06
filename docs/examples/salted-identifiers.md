@@ -19,23 +19,19 @@ Use this when the identifier itself is sensitive — for example anonymous votin
 
 To request one:
 
-- Set `uniqueIdentifierType` to `NullifierType.SALTED` — available both on the SDK's `request()` method and as a prop on the `@zkpassport/ui` verify button (shown below).
-- Add `.facematch("strict")` to your query. Salted identifiers require the strict [FaceMatch](./facematch.md) mode, which confirms the ID is being used by its actual holder; the request throws an error without it.
+- Ask for a salted identifier: `uniqueIdentifierType: "salted"` under `service` on the `@zkpassport/ui` verify button, or `uniqueIdentifierType: NullifierType.SALTED` on the SDK's `request()` method.
+- Add strict [FaceMatch](./facematch.md) to your query. Salted identifiers require it, as it confirms the ID is being used by its actual holder; the request throws an error without it.
 
 <Tabs groupId="framework">
 <TabItem value="react" label="React" default>
 
 ```tsx
 import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
-import { NullifierType } from "@zkpassport/sdk";
 
 <VerifyWithZKPassport
-  name="ZKPassport"
-  logo="https://zkpassport.id/logo.png"
   purpose="Prove your personhood"
-  scope="personhood"
-  uniqueIdentifierType={NullifierType.SALTED}
-  query={(queryBuilder) => queryBuilder.facematch("strict").done()}
+  service={{ scope: "personhood", uniqueIdentifierType: "salted" }}
+  query={{ facematch: true }}
   onSuccess={async ({ proofs, result }) => {
     // Send the proofs to your server to verify them
     const response = await fetch("/api/verify", {
@@ -53,15 +49,11 @@ import { NullifierType } from "@zkpassport/sdk";
 
 ```ts
 import { mountVerifyButton } from "@zkpassport/ui/button";
-import { NullifierType } from "@zkpassport/sdk";
 
 mountVerifyButton(document.getElementById("zkpassport"), {
-  name: "ZKPassport",
-  logo: "https://zkpassport.id/logo.png",
   purpose: "Prove your personhood",
-  scope: "personhood",
-  uniqueIdentifierType: NullifierType.SALTED,
-  query: (queryBuilder) => queryBuilder.facematch("strict").done(),
+  service: { scope: "personhood", uniqueIdentifierType: "salted" },
+  query: { facematch: true },
   onSuccess: async ({ proofs, result }) => {
     // Send the proofs to your server to verify them
     const response = await fetch("/api/verify", {

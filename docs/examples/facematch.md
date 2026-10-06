@@ -20,12 +20,10 @@ This example uses the [`@zkpassport/ui`](../getting-started/quick-start) verify 
 import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
 <VerifyWithZKPassport
-  name="ZKPassport"
-  logo="https://zkpassport.id/logo.png"
   purpose="Prove you are the person on the ID"
-  scope="facematch"
-  // .facematch() without arguments uses the strict mode
-  query={(queryBuilder) => queryBuilder.facematch("strict").done()}
+  service={{ scope: "facematch" }}
+  // facematch: true uses the strict mode
+  query={{ facematch: true }}
   onSuccess={async ({ proofs, result }) => {
     // Send the proofs to your server to verify them
     const response = await fetch("/api/verify", {
@@ -45,12 +43,10 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 import { mountVerifyButton } from "@zkpassport/ui/button";
 
 mountVerifyButton(document.getElementById("zkpassport"), {
-  name: "ZKPassport",
-  logo: "https://zkpassport.id/logo.png",
   purpose: "Prove you are the person on the ID",
-  scope: "facematch",
-  // .facematch() without arguments uses the strict mode
-  query: (queryBuilder) => queryBuilder.facematch("strict").done(),
+  service: { scope: "facematch" },
+  // facematch: true uses the strict mode
+  query: { facematch: true },
   onSuccess: async ({ proofs, result }) => {
     // Send the proofs to your server to verify them
     const response = await fetch("/api/verify", {

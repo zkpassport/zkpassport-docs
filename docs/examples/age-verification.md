@@ -22,11 +22,9 @@ You will not learn their date of birth nor their actual age, only that they are 
 import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
 <VerifyWithZKPassport
-  name="ZKPassport"
-  logo="https://zkpassport.id/logo.png"
   purpose="Prove you are 18+ years old"
-  scope="adult"
-  query={(queryBuilder) => queryBuilder.gte("age", 18).done()}
+  service={{ scope: "adult" }}
+  query={{ age: { min: 18 } }}
   onSuccess={async ({ proofs, result }) => {
     // Send the proofs to your server to verify them
     const response = await fetch("/api/verify", {
@@ -46,11 +44,9 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 import { mountVerifyButton } from "@zkpassport/ui/button";
 
 mountVerifyButton(document.getElementById("zkpassport"), {
-  name: "ZKPassport",
-  logo: "https://zkpassport.id/logo.png",
   purpose: "Prove you are 18+ years old",
-  scope: "adult",
-  query: (queryBuilder) => queryBuilder.gte("age", 18).done(),
+  service: { scope: "adult" },
+  query: { age: { min: 18 } },
   onSuccess: async ({ proofs, result }) => {
     // Send the proofs to your server to verify them
     const response = await fetch("/api/verify", {
@@ -87,16 +83,17 @@ if (verified) {
 
 ## Verify if the user is between 18 and 25 years old
 
-Use two bounds, or the `range` operator (both bounds inclusive). Only the `query` and result handling change — drop them into the same button and server code as above.
+Set both bounds (they are inclusive). Only the `query` and result handling change — drop them into the same button and server code as above.
 
 ```typescript
-// gte is greater than or equal to, lte is less than or equal to
-const query = (queryBuilder) => queryBuilder.gte("age", 18).lte("age", 25).done();
-// Alternatively, use the range operator (both bounds inclusive)
-// const query = (queryBuilder) => queryBuilder.range("age", 18, 25).done();
+const query = { age: { min: 18, max: 25 } };
+// On your server: .gte("age", 18).lte("age", 25)
 
-// On your server, once verify() succeeds
+// Once verify() succeeds
 const isBetween18And25 = result.age.gte.result && result.age.lte.result;
-// const isBetween18And25 = result.age.range.result;
 console.log("User is between 18 and 25 years old", isBetween18And25);
 ```
+
+:::note
+The SDK also has a `range` operator, but the button's `min`/`max` always map to `gte`/`lte` — recreate them with those.
+:::

@@ -44,14 +44,10 @@ function RegistrationForm() {
       <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
 
       <VerifyWithZKPassport
-        name="YourApp"
-        logo="https://yourapp.com/logo.png"
         purpose="Account verification for registration"
-        scope="registration"
+        service={{ scope: "registration" }}
         // In this example we verify the user is 18+ and disclose their nationality
-        query={(queryBuilder) => queryBuilder.gte("age", 18).disclose("nationality").done()}
-        onRequestReceived={() => setStatus("request_received")}
-        onGeneratingProof={() => setStatus("generating_proof")}
+        query={{ age: { min: 18 }, nationality: { disclose: true } }}
         onSuccess={async ({ proofs, result: queryResult }) => {
           try {
             setStatus("sending_to_server");
@@ -77,8 +73,10 @@ function RegistrationForm() {
             return false;
           }
         }}
-        onReject={() => setError("Verification request was rejected")}
-        onError={(err) => setError(`Error during verification: ${err}`)}
+        onError={(err) => {
+          if (err.cancelled) return; // the user declined or closed the window
+          setError(`Error during verification: ${err.message}`);
+        }}
       />
 
       {status !== "idle" && <p>Status: {status.replace(/_/g, " ")}</p>}
@@ -97,11 +95,9 @@ export default RegistrationForm;
 import { mountVerifyButton } from "@zkpassport/ui/button";
 
 mountVerifyButton(document.getElementById("zkpassport"), {
-  name: "YourApp",
-  logo: "https://yourapp.com/logo.png",
   purpose: "Account verification for registration",
-  scope: "registration",
-  query: (queryBuilder) => queryBuilder.gte("age", 18).disclose("nationality").done(),
+  service: { scope: "registration" },
+  query: { age: { min: 18 }, nationality: { disclose: true } },
   onSuccess: async ({ proofs, result: queryResult }) => {
     const emailInput = document.getElementById("email");
     const passwordInput = document.getElementById("password");
@@ -155,7 +151,13 @@ app.post("/register", async (req, res) => {
     const zkPassport = new ZKPassport("your-domain.com");
 
     // Recreate the same query as the client instead of accepting it from the request
-    const { query } = zkPassport.createQuery().gte("age", 18).disclose("nationality").done();
+    // Disclosing anything also discloses the document type, so ask for it here too
+    const { query } = zkPassport
+      .createQuery()
+      .gte("age", 18)
+      .disclose("nationality")
+      .disclose("document_type")
+      .done();
 
     // Verify the proofs
     const { verified, queryResultErrors, uniqueIdentifier } = await zkPassport.verify({

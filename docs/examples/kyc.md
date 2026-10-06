@@ -23,26 +23,22 @@ Even if not fully compliant with KYC, you can use ZKPassport to verify a lot of 
 import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 
 <VerifyWithZKPassport
-  name="ZKPassport"
-  logo="https://zkpassport.id/logo.png"
   purpose="Prove your identity"
-  scope="identity"
-  query={(queryBuilder) =>
-    queryBuilder
-      .disclose("nationality")
-      .disclose("birthdate")
-      // Fullname includes middle names and secondary given names
-      .disclose("fullname")
-      // The expiry date is checked during proof generation, but you may want to store it
-      .disclose("expiry_date")
-      // This is sensitive information, so be careful when handling it
-      .disclose("document_number")
-      // Check the user is not on any of the available sanctions lists (US, UK, EU, Switzerland)
-      .sanctions()
-      // Verify the person generating the proof is the one on the ID
-      .facematch("strict")
-      .done()
-  }
+  service={{ scope: "identity" }}
+  query={{
+    nationality: { disclose: true },
+    birthdate: { disclose: true },
+    // Fullname includes middle names and secondary given names
+    fullname: { disclose: true },
+    // The expiry date is checked during proof generation, but you may want to store it
+    expiry_date: { disclose: true },
+    // This is sensitive information, so be careful when handling it
+    document_number: { disclose: true },
+    // Check the user is not on any of the available sanctions lists (US, UK, EU, Switzerland)
+    sanctions: true,
+    // Verify the person generating the proof is the one on the ID
+    facematch: true,
+  }}
   onSuccess={sendToServer}
 />;
 ```
@@ -54,20 +50,17 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 import { mountVerifyButton } from "@zkpassport/ui/button";
 
 mountVerifyButton(document.getElementById("zkpassport"), {
-  name: "ZKPassport",
-  logo: "https://zkpassport.id/logo.png",
   purpose: "Prove your identity",
-  scope: "identity",
-  query: (queryBuilder) =>
-    queryBuilder
-      .disclose("nationality")
-      .disclose("birthdate")
-      .disclose("fullname")
-      .disclose("expiry_date")
-      .disclose("document_number")
-      .sanctions()
-      .facematch("strict")
-      .done(),
+  service: { scope: "identity" },
+  query: {
+    nationality: { disclose: true },
+    birthdate: { disclose: true },
+    fullname: { disclose: true },
+    expiry_date: { disclose: true },
+    document_number: { disclose: true },
+    sanctions: true,
+    facematch: true,
+  },
   onSuccess: sendToServer,
 });
 ```
@@ -99,7 +92,10 @@ async function handleResult({ proofs, result }) {
     .disclose("fullname")
     .disclose("expiry_date")
     .disclose("document_number")
-    .sanctions()
+    // Disclosing anything also discloses the document type, so ask for it here too
+    .disclose("document_type")
+    // sanctions: true on the button is the strict check
+    .sanctions("all", "all", { strict: true })
     .facematch("strict")
     .done();
   const { verified } = await zkPassport.verify({
