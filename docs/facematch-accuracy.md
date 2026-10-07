@@ -6,7 +6,7 @@ sidebar_label: FaceMatch Accuracy
 
 # FaceMatch Accuracy
 
-What Private FaceMatch measures, how it decides, which models it uses, and what their published accuracy is. Written for integration and compliance reviews. For how to request a FaceMatch, see the [Private FaceMatch example](./examples/facematch).
+How Private FaceMatch compares a face to an ID photo, how accurate the models behind it are, and what has and has not been tested. Written for integration and compliance reviews. For how to request a FaceMatch, see the [Private FaceMatch example](./examples/facematch).
 
 ## What FaceMatch checks
 
@@ -42,10 +42,10 @@ Biometric questionnaires are usually written for the first kind. They ask for **
 | A frame counts when | score **> 0.50** |
 | Final decision | average of the counted frames **≥ 0.50** |
 | Frames averaged | up to 10 |
-| Threshold configurable | No. Fixed in the app, identical for every integrator |
+| Threshold configurable | No — the same value for every integrator |
 | Result reuse | Up to 30 days per ID and per mode, after which a new scan is required |
 
-0.50 is a deliberately conservative setting. A higher threshold makes it harder for the wrong person to pass and easier for the right person to be turned away; a lower one does the reverse. In practice this means a poor scan — bad lighting, glare, a face too far from the camera — fails and has to be retried, rather than quietly passing.
+A threshold of 0.50 is deliberately conservative. A higher one makes it harder for the wrong person to pass and easier for the right person to be turned away; a lower one does the reverse. In practice this means a poor scan — bad lighting, glare, a face too far from the camera — fails and has to be retried, rather than quietly passing.
 
 ## Liveness checks
 
@@ -86,9 +86,9 @@ These are the figures InsightFace publishes for this model. They describe the mo
 | AgeDB-30 | The same person photographed up to 30 years apart | 98.23 % |
 | IJB-C (E4) | Hard real-world photos and video frames | 97.25 % |
 
-### A much harder test, broken down by region
+### A much harder test, broken down by group
 
-InsightFace also reports results on IFRT, its own large-scale test: 1.6 million images of 242,143 people, judged at a very strict setting — at most **one wrong pair accepted in a million**. The score is the share of genuine pairs the model still recognises at that setting. This is far stricter than anything ZKPassport runs at, which is why the numbers are lower.
+InsightFace also reports results on IFRT, its own large-scale test: 1.6 million images of 242,143 people, judged at a very strict setting — at most **one wrong pair accepted in a million**. The score is the share of genuine pairs the model still recognises at that setting. It is far stricter than anything ZKPassport runs at, which is why these numbers are lower than the ones above.
 
 | Group | Score |
 | --- | --- |
@@ -99,14 +99,14 @@ InsightFace also reports results on IFRT, its own large-scale test: 1.6 million 
 | East Asian | 74.96 % |
 
 :::info
-These are not ZKPassport pass rates and should not be read as one. IFRT compares every image against every other at a setting far stricter than a one-to-one check against your own passport photo, so the figures say how the model ranks under maximum pressure, not how often a user completes a FaceMatch.
+These are not ZKPassport pass rates and should not be read as such. IFRT compares every image against every other at a setting far stricter than a one-to-one check against your own passport photo, so the figures say how the model ranks under maximum pressure, not how often a user completes a FaceMatch.
 
 What they do show is that performance is not uniform across groups, with the East Asian figure the clear outlier. The gap is real, and we have not measured it at our own threshold. Teams with obligations around demographic performance should factor this in and offer a fallback for users who cannot complete a FaceMatch.
 :::
 
 ### How these figures relate to our build
 
-The figures above were measured on the model as InsightFace released it, with 32-bit weights. ZKPassport ships the same model with its weights stored in 8 bits, which keeps the download small; the arithmetic is unchanged.
+The figures above were measured on InsightFace's release, which stores its weights in 32 bits. ZKPassport ships the same model with 8-bit weights.
 
 Two peer-reviewed studies measure what 8-bit storage costs on this architecture. Both compress more aggressively than we do — they round the calculations as well as the weights — so they bound the difference rather than describe it:
 
@@ -115,14 +115,14 @@ Two peer-reviewed studies measure what 8-bit storage costs on this architecture.
 
 ## What has not been measured
 
-Stated plainly, so it does not have to be inferred:
+Stated plainly, rather than left to be inferred:
 
 - **No independent laboratory evaluation.** InsightFace models are not submitted to NIST FRTE, so no NIST figures exist for this model or for ZKPassport's build of it.
-- **No ZKPassport study on chip photos.** The published benchmarks use photos from the web. Chip photos are different: passport-style, sometimes a decade old, and stored at low resolution. We have not published our own FMR/FNMR figures on that kind of image.
+- **No ZKPassport study on chip photos.** The published benchmarks use photos from the web. Chip photos are different: passport-style, sometimes a decade old, and stored at low resolution. We have no published figures of our own for that kind of image.
 - **No certified PAD testing**, as noted under [Liveness checks](#liveness-checks).
 - **The 8-bit evidence is indirect.** Both papers test the same architecture and loss, but a model trained on a different dataset (MS1MV2, not WebFace600K). It is strong evidence, not a measurement of the exact file we ship.
 
-## What leaves the device, and what you receive
+## What stays on the phone, and what you receive
 
 Camera frames, the chip photo and the faceprints stay on the phone. None of them are transmitted to ZKPassport or to you, and none of them are kept once the scan finishes.
 
@@ -130,5 +130,5 @@ What the phone does keep, to allow the [30-day reuse](#how-the-decision-is-made)
 
 Your server receives a zero-knowledge proof and `result.facematch.passed` — a single pass or fail. To make that trustworthy, the app binds the outcome to the device and to the document:
 
-- The scan result is signed by **Apple App Attest** or **Google Play Integrity**, so you can tell it ran on a device that passes Apple's or Google's integrity checks. The app refuses to produce a FaceMatch on devices these services do not vouch for — see [Limitations](./limitations#facematch-support).
+- The scan result is signed by **Apple App Attest** or **Google Play Integrity**, so you can tell it ran on a device that passes those checks. The app refuses to produce a FaceMatch on devices these services do not vouch for — see [Limitations](./limitations#facematch-support).
 - The mode used, the final score, the threshold and a hash of the chip photo are all sealed into that signed attestation, and from there into the proof. Because the mode and the document are covered by the signature, a result cannot be re-presented as a different mode or against a different document.
