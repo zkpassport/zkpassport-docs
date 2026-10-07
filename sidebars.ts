@@ -59,6 +59,11 @@ const sidebars: SidebarsConfig = {
     "api",
     {
       type: "doc",
+      label: "FaceMatch Accuracy",
+      id: "facematch-accuracy",
+    },
+    {
+      type: "doc",
       label: "FAQ",
       id: "faq",
     },

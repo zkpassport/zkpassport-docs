@@ -11,6 +11,10 @@ When verifying a user, you can request ZKPassport to conduct a Private FaceMatch
 
 The FaceMatch mode can be `strict` or `regular`. The strict mode triggers a more extensive liveness check to prevent spoofing (e.g. using someone else's photo or holding the ID photo in front of the camera), while the regular mode does not provide the same level of protection but is faster.
 
+:::info
+For the models used, their published accuracy figures and what the check does and does not cover, see [FaceMatch Accuracy](../facematch-accuracy).
+:::
+
 This example uses the [`@zkpassport/ui`](../getting-started/quick-start) verify button and verifies the proofs on your server.
 
 <Tabs groupId="framework">
