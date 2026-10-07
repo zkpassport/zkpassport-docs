@@ -13,18 +13,9 @@ The app takes a short camera scan of the user's face and compares it with the ph
 
 > Is the person holding the phone the same person as the photo on this ID?
 
-Face technology does two very different jobs. ZKPassport only does the second.
+That is a one-to-one check — the kind your phone does when it unlocks on seeing your face. It is not a search. There is no collection of faces anywhere in ZKPassport, and the single photo FaceMatch compares against is read off the user's own chip, seconds earlier.
 
-| | Searching a crowd | Checking one photo |
-| --- | --- | --- |
-| Asks | Who is this person? | Is this the same person? |
-| Compares against | Millions of stored faces | One photo, from the user's own ID |
-| Example | A photo app sorting your library by face | Your phone unlocking when it sees you |
-| Known as | Identification, or 1:N | Verification, or 1:1 |
-
-There is no database of faces anywhere in ZKPassport. The single photo FaceMatch compares against is read off the user's own chip, seconds earlier.
-
-Biometric questionnaires are usually written for the first kind. They ask for **FPIR** and **FNIR** at a given "gallery size" — measures of searching a collection of faces, which have no answer here because there is no collection. The ones that fit are **FMR**, how often the wrong person is let in, and **FNMR**, how often the right person is turned away.
+The distinction matters when filling in a biometric questionnaire. Those are usually written for face *search* systems — **identification**, or 1:N — and ask for **FPIR** and **FNIR** at a given "gallery size", which have no answer here because there is no gallery. The measures that fit a one-to-one check — **verification**, or 1:1 — are **FMR**, how often the wrong person is let in, and **FNMR**, how often the right person is turned away.
 
 ## How the decision is made
 
@@ -36,6 +27,7 @@ Biometric questionnaires are usually written for the first kind. They ask for **
 
 | Parameter | Value |
 | --- | --- |
+| Reference photo | The portrait on the ID's chip, recorded by the issuing authority to the ICAO 9303 standard |
 | Comparison | Cosine similarity — a standard way of measuring how alike two faceprints are |
 | Score range | −1 to 1 — higher means more similar |
 | A frame counts when | score **> 0.50** |
@@ -58,7 +50,7 @@ A face comparison on its own can be fooled by holding a printed photo or a scree
 | Suited to | Low-risk flows | KYC and anything where the result carries weight |
 
 :::info
-This is an **active** liveness check: the app issues a challenge and verifies the face follows it. ZKPassport does not run a separate passive presentation-attack-detection (PAD) model, and this check has not been evaluated under ISO/IEC 30107-3 by an accredited laboratory. If your compliance process requires a certified PAD level, treat this as an open item and [get in touch](https://zkpassport.id).
+This is an **active** liveness check: the app issues a challenge and verifies the face follows it. There is no separate liveness score to set a threshold on — the user either completes the challenge within the scan or the scan fails. ZKPassport does not run a separate passive presentation-attack-detection (PAD) model, and this check has not been evaluated under ISO/IEC 30107-3 by an accredited laboratory. If your compliance process requires a certified PAD level, treat this as an open item and [get in touch](https://zkpassport.id).
 :::
 
 ## The models
