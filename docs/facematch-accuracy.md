@@ -28,7 +28,7 @@ This distinction matters when reading a biometric vendor questionnaire. Most of 
 ## How the decision is made
 
 1. A detector model finds the face in each camera frame.
-2. A recognition model turns that face into a **faceprint** — a list of 512 numbers describing the face. Nothing in it can be turned back into a picture.
+2. A recognition model turns that face into a **faceprint** — a list of 512 numbers describing the face, not an image.
 3. The same is done once for the photo read off the chip.
 4. The two faceprints are compared. The result is a similarity score.
 5. Frames scoring above the threshold count towards completion. The app averages them into the final score.
@@ -52,8 +52,7 @@ A face comparison on its own can be fooled by holding a printed photo or a scree
 | | `regular` | `strict` (default) |
 | --- | --- | --- |
 | What the user does | Looks at the camera | Looks at the camera, then left, up, right and down |
-| Completion | 10 matching frames within a rolling window of 20 | 2 matching frames facing forward, then 2 per direction |
-| Direction tolerance | — | ±35° from the requested direction |
+| How it completes | Several matching frames while facing the camera | Matching frames at the camera, then at each of the four directions |
 | Speed | Faster | Slower |
 | Suited to | Low-risk flows | KYC and anything where the result carries weight |
 
@@ -97,8 +96,10 @@ InsightFace also reports results on IFRT, its own large-scale test: 1.6 million 
 | African | 90.29 % |
 | East Asian | 74.96 % |
 
-:::warning
-The East Asian figure is the clear outlier. At this operating point the model recognises roughly three in four genuine East Asian pairs, against about nineteen in twenty Caucasian pairs. ZKPassport runs at a much looser operating point, so the practical gap is smaller — but it is real, and we have not measured it at our own threshold. Teams with obligations around demographic performance should factor this in and plan a fallback for users who cannot complete a FaceMatch.
+:::info
+These are not ZKPassport pass rates and should not be read as one. IFRT compares every image against every other at a setting far stricter than a one-to-one check against your own passport photo, so the figures say how the model ranks under maximum pressure, not how often a user completes a FaceMatch.
+
+What they do show is that performance is not uniform across groups, with the East Asian figure the clear outlier. The gap is real, and we have not measured it at our own threshold. Teams with obligations around demographic performance should factor this in and offer a fallback for users who cannot complete a FaceMatch.
 :::
 
 ### How these figures relate to our build
@@ -121,9 +122,11 @@ Stated plainly, so it does not have to be inferred:
 
 ## What leaves the device, and what you receive
 
-Camera frames, the chip photo and the faceprints stay on the phone. None of them are transmitted to ZKPassport or to you, and they are not stored after the scan.
+Camera frames, the chip photo and the faceprints stay on the phone. None of them are transmitted to ZKPassport or to you, and none of them are kept once the scan finishes.
+
+What the phone does keep, to allow the [30-day reuse](#how-the-decision-is-made) above, is the signed result itself: the mode, the score, the threshold, and hashes of the chip photo and the faceprint. It holds no image and no faceprint, and it never leaves the device.
 
 Your server receives a zero-knowledge proof and `result.facematch.passed` — a single pass or fail. To make that trustworthy, the app binds the outcome to the device and to the document:
 
-- The scan result is signed by **Apple App Attest** or **Google Play Integrity**, so you can tell it ran on a genuine, unmodified device. The app refuses to produce a FaceMatch on devices these services do not vouch for — see [Limitations](./limitations#facematch-support).
-- The mode used, the final score, the threshold and a hash of the chip photo are all sealed into that signed attestation, and from there into the proof. A `strict` result cannot be downgraded to `regular`, and a result from one document cannot be replayed against another.
+- The scan result is signed by **Apple App Attest** or **Google Play Integrity**, so you can tell it ran on a device that passes Apple's or Google's integrity checks. The app refuses to produce a FaceMatch on devices these services do not vouch for — see [Limitations](./limitations#facematch-support).
+- The mode used, the final score, the threshold and a hash of the chip photo are all sealed into that signed attestation, and from there into the proof. Because the mode and the document are covered by the signature, a result cannot be re-presented as a different mode or against a different document.
