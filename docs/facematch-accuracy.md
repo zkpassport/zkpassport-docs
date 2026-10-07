@@ -1,7 +1,6 @@
 ---
 id: facematch-accuracy
 title: FaceMatch Accuracy
-sidebar_label: FaceMatch Accuracy
 ---
 
 # FaceMatch Accuracy
