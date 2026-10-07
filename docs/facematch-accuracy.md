@@ -78,29 +78,31 @@ These are the figures InsightFace publishes for this model. They describe the mo
 
 ### Standard benchmarks
 
-| Benchmark | What it tests | Score |
-| --- | --- | --- |
-| LFW | Everyday photos — same person or not | 99.83 % |
-| CFP-FP | One photo from the front, one from the side | 99.33 % |
-| AgeDB-30 | The same person photographed up to 30 years apart | 98.23 % |
-| IJB-C (E4) | Hard real-world photos and video frames | 97.25 % |
+| Benchmark | What it tests | Comparisons | Score |
+| --- | --- | --- | --- |
+| LFW | Everyday photos — same person or not | 6,000 pairs | 99.83 % |
+| CFP-FP | One photo from the front, one from the side | 7,000 pairs | 99.33 % |
+| AgeDB-30 | The same person photographed up to 30 years apart | 6,000 pairs | 98.23 % |
+| IJB-C (E4) | Hard real-world photos and video frames | 19.6k genuine, 15.6M impostor | 97.25 % |
+
+These counts matter when reading small differences. LFW is 6,000 pairs, so one wrong pair moves the score by about 0.017 points — a gap of a few hundredths means one or two pairs, not a real difference.
 
 ### A much harder test, broken down by group
 
-InsightFace also reports results on IFRT, its own large-scale test: 1.6 million images of 242,143 people, judged at a very strict setting — at most **one wrong pair accepted in a million**. The score is the share of genuine pairs the model still recognises at that setting. It is far stricter than anything ZKPassport runs at, which is why these numbers are lower than the ones above.
+InsightFace also reports results on IFRT, its own large-scale test: 242,143 people, every image compared against every other, at a setting that accepts at most **one wrong pair in a million**. The score is the share of genuine pairs the model still recognises. It is far stricter than anything ZKPassport runs at, which is why these numbers are lower than the ones above.
 
-| Group | Score |
-| --- | --- |
-| All groups | 91.25 % |
-| Caucasian | 94.70 % |
-| South Asian | 93.16 % |
-| African | 90.29 % |
-| East Asian | 74.96 % |
+| Group | Images tested | Score |
+| --- | --- | --- |
+| All groups | 1,624,305 | 91.25 % |
+| Caucasian | 697,245 | 94.70 % |
+| South Asian | 237,080 | 93.16 % |
+| African | 298,010 | 90.29 % |
+| East Asian | 391,970 | 74.96 % |
 
 :::info
 These are not ZKPassport pass rates and should not be read as such. IFRT compares every image against every other at a setting far stricter than a one-to-one check against your own passport photo, so the figures say how the model ranks under maximum pressure, not how often a user completes a FaceMatch.
 
-What they do show is that performance is not uniform across groups, with the East Asian figure the clear outlier. The gap is real, and we have not measured it at our own threshold. Teams with obligations around demographic performance should factor this in and offer a fallback for users who cannot complete a FaceMatch.
+What they do show is that performance is not uniform across groups, with the East Asian figure the clear outlier. The gap is real — it is measured over 391,970 images, so it is not a small-sample artefact — and we have not measured it at our own threshold. Teams with obligations around demographic performance should factor this in and offer a fallback for users who cannot complete a FaceMatch.
 :::
 
 ### How these figures relate to our build
@@ -110,7 +112,7 @@ The figures above were measured on InsightFace's release, which stores its weigh
 Two peer-reviewed studies measure what 8-bit storage costs on this architecture. Both compress more aggressively than we do — they round the calculations as well as the weights — so they bound the difference rather than describe it:
 
 - [QuantFace (ICPR 2022)](https://arxiv.org/abs/2206.10526) finds every benchmark within 0.31 points of full precision, and most within 0.1 — LFW 99.80 % → 99.78 %, IJB-C 95.74 % → 95.66 %.
-- [Neto et al. (BIOSIG 2023)](https://arxiv.org/abs/2308.11840) finds no measurable change for any ethnic group on RFW: all four groups within ±0.1 points, in both directions.
+- [Neto et al. (BIOSIG 2023)](https://arxiv.org/abs/2308.11840) finds no measurable change for any ethnic group on RFW (6,000 pairs per group): all four within ±0.1 points, in both directions.
 
 ## What has not been measured
 
