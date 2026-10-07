@@ -70,7 +70,7 @@ Both models run entirely on the phone and are downloaded once, on first use.
 | Find the face in the frame | SCRFD-2.5GF | [InsightFace](https://github.com/deepinsight/insightface) | 3.4 MB |
 | Turn a face into a faceprint | ArcFace ResNet-50, trained on WebFace600K | [InsightFace `buffalo_l`](https://github.com/deepinsight/insightface/blob/master/python-package/docs/model_zoo.md) (`w600k_r50`, release v0.7) | 43.8 MB |
 
-The recognition model is the one InsightFace publishes, with its weights stored in 8 bits instead of 32 to cut the download. The calculations themselves are unchanged. See [The 8-bit build](#the-8-bit-build) below.
+The recognition model is the one InsightFace publishes, with its weights stored in 8 bits instead of 32 to keep the download small. The calculations themselves are unchanged — see [How these figures relate to our build](#how-these-figures-relate-to-our-build).
 
 ## Published accuracy of the recognition model
 
@@ -101,34 +101,14 @@ InsightFace also reports results on IFRT, its own large-scale test: 1.6 million 
 The East Asian figure is the clear outlier. At this operating point the model recognises roughly three in four genuine East Asian pairs, against about nineteen in twenty Caucasian pairs. ZKPassport runs at a much looser operating point, so the practical gap is smaller — but it is real, and we have not measured it at our own threshold. Teams with obligations around demographic performance should factor this in and plan a fallback for users who cannot complete a FaceMatch.
 :::
 
-## The 8-bit build
+### How these figures relate to our build
 
-ZKPassport stores the model's weights in 8 bits rather than 32. The file drops from 174 MB to 44 MB; the arithmetic is unchanged.
+The figures above were measured on the model as InsightFace released it, with 32-bit weights. ZKPassport ships the same model with its weights stored in 8 bits, which keeps the download small; the arithmetic is unchanged.
 
-Two peer-reviewed papers measure what 8-bit storage costs on the same architecture. Both compress *more* aggressively than ZKPassport does — they round the calculations as well as the weights — so their results are an upper bound on our change.
+Two peer-reviewed studies measure what 8-bit storage costs on this architecture. Both compress more aggressively than we do — they round the calculations as well as the weights — so they bound the difference rather than describe it:
 
-**Overall** ([QuantFace, ICPR 2022](https://arxiv.org/abs/2206.10526), ResNet-50, 174.68 MB → 43.67 MB):
-
-| Benchmark | Full size | 8-bit | Change |
-| --- | --- | --- | --- |
-| LFW | 99.80 % | 99.78 % | −0.02 |
-| CFP-FP | 98.01 % | 97.70 % | −0.31 |
-| AgeDB-30 | 98.08 % | 98.00 % | −0.08 |
-| CALFW | 96.10 % | 96.00 % | −0.10 |
-| CPLFW | 92.43 % | 92.17 % | −0.26 |
-| IJB-C | 95.74 % | 95.66 % | −0.08 |
-| IJB-B | 94.19 % | 94.15 % | −0.04 |
-
-**By ethnicity** ([Neto et al., BIOSIG 2023](https://arxiv.org/abs/2308.11840), ResNet-50 on RFW, 6,000 photo pairs per group):
-
-| Group | Full size | 8-bit | Change |
-| --- | --- | --- | --- |
-| Caucasian | 99.00 % | 99.07 % | +0.07 |
-| Indian | 98.15 % | 98.07 % | −0.08 |
-| Asian | 97.62 % | 97.65 % | +0.03 |
-| African | 98.32 % | 98.40 % | +0.08 |
-
-Every difference is within ±0.1 points — about five pairs in six thousand — and falls in both directions. No group is measurably disadvantaged by the smaller file.
+- [QuantFace (ICPR 2022)](https://arxiv.org/abs/2206.10526) finds every benchmark within 0.31 points of full precision, and most within 0.1 — LFW 99.80 % → 99.78 %, IJB-C 95.74 % → 95.66 %.
+- [Neto et al. (BIOSIG 2023)](https://arxiv.org/abs/2308.11840) finds no measurable change for any ethnic group on RFW: all four groups within ±0.1 points, in both directions.
 
 ## What has not been measured
 
