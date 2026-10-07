@@ -64,14 +64,14 @@ This is an **active** liveness check: the app issues a challenge and verifies th
 
 ## The models
 
-Both models run entirely on the phone and are downloaded once, on first use.
+Both models come from [InsightFace](https://github.com/deepinsight/insightface), run entirely on the phone, and are downloaded once on first use.
 
-| Role | Model | Source | Size |
-| --- | --- | --- | --- |
-| Find the face in the frame | SCRFD-2.5GF | [InsightFace](https://github.com/deepinsight/insightface) | 3.4 MB |
-| Turn a face into a faceprint | ArcFace ResNet-50, trained on WebFace600K | [InsightFace `buffalo_l`](https://github.com/deepinsight/insightface/blob/master/python-package/docs/model_zoo.md) (`w600k_r50`, release v0.7) | 43.8 MB |
+| Role | Model | Size |
+| --- | --- | --- |
+| Find the face in the frame | SCRFD-2.5GF | 3.4 MB |
+| Turn it into a faceprint | ArcFace ResNet-50, trained on WebFace600K | 43.8 MB |
 
-The recognition model is the one InsightFace publishes, with its weights stored in 8 bits instead of 32 to keep the download small. The calculations themselves are unchanged — see [How these figures relate to our build](#how-these-figures-relate-to-our-build).
+The recognition model is InsightFace's [`buffalo_l`](https://github.com/deepinsight/insightface/blob/master/python-package/docs/model_zoo.md) release (`w600k_r50`, v0.7), with its weights stored in 8 bits instead of 32 to keep the download small. The calculations themselves are unchanged — see [How these figures relate to our build](#how-these-figures-relate-to-our-build).
 
 ## Published accuracy of the recognition model
 
