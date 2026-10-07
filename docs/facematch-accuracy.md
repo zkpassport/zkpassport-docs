@@ -14,16 +14,22 @@ The app takes a short camera scan of the user's face and compares it with the ph
 
 > Is the person holding the phone the same person as the photo on this ID?
 
-This is a **one-to-one** comparison against a single reference photo — the one on the user's own document. It is not a search. FaceMatch never compares the user against a database of other people, and ZKPassport holds no such database.
+Face technology is used for two very different jobs, and they are easy to mix up. ZKPassport only does the second one.
 
-This distinction matters when reading a biometric vendor questionnaire. Most of them ask for *identification* metrics — FPIR and FNIR at a given gallery size — which describe searching one face against many enrolled identities. Those metrics do not apply to ZKPassport.
-
-| | Identification (1:N) | Verification (1:1) |
+| | Searching a crowd | Checking one photo |
 | --- | --- | --- |
-| Question | Who is this person? | Is this the same person? |
-| Compared against | A gallery of many enrolled faces | One photo, from this user's own ID |
-| Usual metrics | FPIR / FNIR at a stated gallery size | FMR / FNMR, or TAR at a fixed FAR |
-| Used by ZKPassport | No | Yes |
+| The question it answers | Who is this person? | Is this the same person? |
+| An everyday example | A photo app finding every picture of one person in your library | Your phone unlocking when it recognises your face |
+| The face is compared to | Thousands or millions of stored faces | A single photo — the one on the user's own ID |
+| What can go wrong | The wrong person is picked out of the crowd, or someone who is in it gets missed | The wrong person is let in, or the right person is turned away |
+| Its technical name | Identification, or **one-to-many** (written 1:N) | Verification, or **one-to-one** (written 1:1) |
+| Does ZKPassport do this? | **No** | **Yes** |
+
+FaceMatch never compares a user against a database of other people. There is no database. The only photo it compares against is the one on that user's own document, read off its chip seconds earlier.
+
+**Why this matters for a questionnaire.** Biometric vendor forms usually ask for *FPIR* and *FNIR* at a stated "gallery size" — how often a search through a collection of, say, 10,000 faces returns the wrong person, or fails to find the right one. Those questions have no answer here, because there is no gallery to search.
+
+The equivalent measures for checking one photo are **FMR**, the false match rate, meaning how often the wrong person is let in; and **FNMR**, the false non-match rate, meaning how often the right person is turned away. Those are the measures that fit what ZKPassport does.
 
 ## How the decision is made
 
@@ -35,7 +41,7 @@ This distinction matters when reading a biometric vendor questionnaire. Most of 
 
 | Parameter | Value |
 | --- | --- |
-| Comparison | Cosine similarity between two 512-number faceprints |
+| Comparison | Cosine similarity — a standard way of measuring how alike two faceprints are |
 | Score range | −1 to 1 — higher means more similar |
 | A frame counts when | score **> 0.50** |
 | Final decision | average of the counted frames **≥ 0.50** |
