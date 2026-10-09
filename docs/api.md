@@ -405,7 +405,7 @@ facematch(mode?: FacematchMode): QueryBuilder
 
 Requires that the ID holder's face matches the photo on the ID, verified locally on the device. See the [Private FaceMatch example](./examples/facematch).
 
-- `mode` (optional): `"strict"` (default) runs an extensive liveness check for higher-security flows such as KYC; `"regular"` runs a basic liveness check and is faster.
+- `mode` (optional): `"strict"` (default) runs an extensive liveness check for higher-security flows such as KYC; `"regular"` skips the head-movement challenge, relying on the multi-frame comparison alone, and is faster. See the [Private FaceMatch Technical Note](./facematch-accuracy#liveness).
 
 #### policy
 

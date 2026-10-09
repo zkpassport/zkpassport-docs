@@ -1,127 +1,271 @@
 ---
 id: facematch-accuracy
-title: FaceMatch Accuracy
+title: Private FaceMatch Technical Note
 ---
 
-# FaceMatch Accuracy
+# Private FaceMatch Technical Note
 
-How Private FaceMatch compares a face to an ID photo, how accurate the models behind it are, and what has and has not been tested. Written for integration and compliance reviews. For how to request a FaceMatch, see the [Private FaceMatch example](./examples/facematch).
+This page describes how Private FaceMatch works, which models it uses, how accurate those models are, and what has not been measured. It is written for integration, compliance and regulatory reviews. For how to request a FaceMatch in your integration, see the [Private FaceMatch example](./examples/facematch).
 
-## What FaceMatch checks
+| | |
+| --- | --- |
+| Provider | ZKPassport |
+| Product | Private FaceMatch, part of the ZKPassport mobile app |
+| App version described | 1.5.0 |
+| Face detection model | SCRFD-2.5G-KPS (InsightFace) |
+| Face recognition model | ArcFace, IResNet-50, trained on WebFace600K (InsightFace `buffalo_l` v0.7, `w600k_r50`), shipped with 8-bit weights |
+| Last updated | October 2026 |
 
-The app takes a short camera scan of the user's face and compares it with the photo stored on the chip of their ID. It answers one question:
+## What Private FaceMatch does
 
-> Is the person holding the phone the same person as the photo on this ID?
+Private FaceMatch answers one question: is the person holding the phone the same person as the one in the photo stored on the chip of their ID?
 
-That is a one-to-one check — the kind your phone does when it unlocks on seeing your face. It is not a search. There is no collection of faces anywhere in ZKPassport, and the single photo FaceMatch compares against is read off the user's own chip, seconds earlier.
+It is a one-to-one comparison (face verification), not a search of a database (face identification). The reference photo is read from the chip of the user's passport or ID card during the NFC scan, and the ID's own cryptographic signature covers that photo. The live face is captured from the phone camera. Both are compared on the phone and the only output that leaves the device is a zero-knowledge proof carrying a single pass or fail.
 
-The distinction matters when filling in a biometric questionnaire. Those are usually written for face *search* systems — **identification**, or 1:N — and ask for **FPIR** and **FNIR** at a given "gallery size", which have no answer here because there is no gallery. The measures that fit a one-to-one check — **verification**, or 1:1 — are **FMR**, how often the wrong person is let in, and **FNMR**, how often the right person is turned away.
+### How it differs from a hosted face verification service
 
-## How the decision is made
+| | Private FaceMatch | Typical hosted service |
+| --- | --- | --- |
+| Reference image | Portrait on the ID chip, written by the issuing authority and covered by the document signature | A selfie, a scan of the document photo page, or a stored enrollment template |
+| Where the comparison runs | On the user's phone | On the vendor's servers |
+| What the verifier receives | A zero-knowledge proof and a boolean `passed` | Images, templates, similarity scores, or a vendor API response |
+| Biometric data retained | None. Camera frames, the chip photo and the faceprints are discarded when the scan ends | Often retained by the vendor or the integrator |
+| Gallery | None. There is no database of enrolled faces anywhere in ZKPassport | Usually one per integrator |
+| Threshold | Fixed by ZKPassport, identical for every integrator | Configurable per integrator |
+| Proof of origin | Apple App Attest or Android Key Attestation and Play Integrity, verified inside the proof | Vendor trust |
 
-1. A detector model finds the face in each camera frame.
-2. A recognition model turns that face into a **faceprint** — a list of 512 numbers describing the face, not an image.
-3. The same is done once for the photo read off the chip.
-4. The two faceprints are compared. The result is a similarity score.
-5. Frames scoring above the threshold count towards completion. The app averages them into the final score.
+### Answering identification questionnaires
+
+Many biometric questionnaires are written for identification systems (1:N) and ask for FPIR and FNIR at a given gallery size. Those metrics do not apply to Private FaceMatch because there is no gallery. The measures that describe a one-to-one comparison are:
+
+- **FMR (False Match Rate)**: how often two different people are accepted as the same person.
+- **FNMR (False Non-Match Rate)**: how often the same person is rejected.
+
+These follow ISO/IEC 19795-1. The published figures further down use the equivalent terms TAR (True Accept Rate, equal to 1 − FNMR) and FAR (False Accept Rate, equal to FMR).
+
+## How a scan works
+
+1. The app reads the portrait from the chip (data group 2) during the NFC scan and runs it through the same detector and recognition model as the camera frames, producing the reference faceprint.
+2. The front camera streams frames at 640×480. On each frame the detector finds the largest face and its five landmarks (eyes, nose, mouth corners).
+3. The face is aligned to a 112×112 crop from those landmarks and the recognition model turns it into a faceprint: a vector of 512 numbers. The faceprint is not an image and cannot be turned back into one.
+4. The frame faceprint is compared with the reference faceprint using cosine similarity. A frame counts as a match when its score is above the threshold.
+5. The scan completes once enough frames have matched (and, in strict mode, once the head-movement challenge is done). The scores of the matching frames are averaged into the final score.
+6. The phone's attestation service signs the outcome, and the app produces a zero-knowledge proof over that signature.
 
 | Parameter | Value |
 | --- | --- |
-| Reference photo | The portrait on the ID's chip, recorded by the issuing authority to the ICAO 9303 standard |
-| Comparison | Cosine similarity — a standard way of measuring how alike two faceprints are |
-| Score range | −1 to 1 — higher means more similar |
-| A frame counts when | score **> 0.50** |
-| Final decision | average of the counted frames **≥ 0.50** |
-| Frames averaged | up to 10 |
-| Threshold configurable | No — the same value for every integrator |
-| Result reuse | Up to 30 days per ID and per mode, after which a new scan is required |
+| Reference image | ICAO 9303 portrait from the ID chip (data group 2) |
+| Probe images | Live camera frames, 640×480, up to 30 per second; a faceprint is computed for every second detected face |
+| Face detection | SCRFD-2.5G-KPS, detection score at least 0.3, largest detected face is used |
+| Alignment | Similarity transform of the five landmarks to the ArcFace reference positions, 112×112 crop |
+| Faceprint | 512-dimensional ArcFace embedding, L2-normalised |
+| Comparison | Cosine similarity of the two faceprints |
+| Score range | −1 to 1, higher means more similar |
+| Per-frame match rule | score strictly greater than 0.50 |
+| Frames required | 10 matching frames (see liveness modes for how they are collected) |
+| Final score | Mean of the 10 matching frames' scores, recorded in the attestation together with the threshold |
+| Timeout | 60 seconds without a matching frame ends the scan; the user can retry |
+| Decision unit | One scan session, per ID and per mode |
+| Result reuse | A completed scan is reusable for 30 days for the same ID and mode, after which a new scan is required |
 
-A threshold of 0.50 is deliberately conservative. A higher one makes it harder for the wrong person to pass and easier for the right person to be turned away; a lower one does the reverse. In practice this means a poor scan — bad lighting, glare, a face too far from the camera — fails and has to be retried, rather than quietly passing.
+### Matching threshold
 
-## Liveness checks
+| | |
+| --- | --- |
+| Default threshold | 0.50 cosine similarity |
+| Configurable by the integrator | No. Every integrator gets the same threshold |
+| Treatment of equality | A frame scoring exactly 0.50 does not count |
+| How it was chosen | Fixed by ZKPassport on the conservative side of the range commonly used with ArcFace models. Raising it makes it harder for a different person to pass and easier for the right person to be rejected; lowering it does the opposite |
+| Failure behaviour | A poor capture (bad lighting, glare, face too far away, strong head tilt) produces frames that do not match. They are not counted and the scan keeps going until it times out. The user is told to retry |
 
-A face comparison on its own can be fooled by holding a printed photo or a screen in front of the camera. So the app also checks that it is looking at a live person. Both modes keep matching every frame against the ID photo while the check runs.
+ZKPassport has not measured FMR and FNMR at this threshold on ID chip photos. See [What has not been measured](#what-has-not-been-measured).
+
+## Liveness
+
+A face comparison on its own can be fooled by holding a printed photo or a screen in front of the camera. Private FaceMatch has two modes that differ in how much protection they add.
 
 | | `regular` | `strict` (default) |
 | --- | --- | --- |
-| What the user does | Looks at the camera | Looks at the camera, then left, up, right and down |
-| How it completes | Several matching frames while facing the camera | Matching frames at the camera, then at each of the four directions |
-| Speed | Faster | Slower |
-| Suited to | Low-risk flows | KYC and anything where the result carries weight |
+| What the user does | Looks at the camera | Looks at the camera, then turns their head left, up, right and down when prompted |
+| Frames collected | 10 frames that match the ID photo | 2 matching frames facing the camera, then 2 matching frames at each of the four directions |
+| Head-movement check | None | Each turned frame must have the head pose within 35° of the requested direction and turned far enough to be unambiguous, and must still match the ID photo above the threshold |
+| Protection | Requires a live camera feed of a face that matches the ID across several frames. A printed photo or a replayed video of the ID holder is not detected | A printed photo cannot follow the prompts. A replayed video has to show the right person turning in the requested order while staying above the threshold on every counted frame |
+| Speed | A few seconds | Typically 10 to 20 seconds |
+| Suited to | Low-risk flows where speed matters | KYC and any flow where the result carries weight |
 
-:::info
-This is an **active** liveness check: the app issues a challenge and verifies the face follows it. There is no separate liveness score to set a threshold on — the user either completes the challenge within the scan or the scan fails. ZKPassport does not run a separate passive presentation-attack-detection (PAD) model, and this check has not been evaluated under ISO/IEC 30107-3 by an accredited laboratory. If your compliance process requires a certified PAD level, treat this as an open item and [get in touch](https://zkpassport.id).
-:::
+The head pose is estimated from the five landmarks returned by the detector, so the challenge uses no additional model.
+
+| | |
+| --- | --- |
+| Type of liveness | Active (challenge-response). The app issues head-movement prompts and verifies that the detected face follows them while continuing to match the ID photo |
+| Passive presentation attack detection (PAD) model | None |
+| Liveness score and threshold | None. The challenge is either completed within the session or the scan times out |
+| Inconclusive results | A scan that times out produces no result. Nothing is recorded or attested |
+| Decision unit | Per scan session |
+| ISO/IEC 30107-3 evaluation | Not performed. No accredited laboratory has tested Private FaceMatch for presentation attack detection, and no APCER/BPCER figures exist |
+
+If your compliance process requires a certified PAD level, treat this as an open item and [get in touch](https://zkpassport.id).
 
 ## The models
 
-Both models come from [InsightFace](https://github.com/deepinsight/insightface), run entirely on the phone, and are downloaded once on first use.
+Both models come from the open-source [InsightFace](https://github.com/deepinsight/insightface) project. They run entirely on the phone through ONNX Runtime (using Core ML on iOS) and are downloaded from ZKPassport's CDN on first use.
 
-| Role | Model | Size |
-| --- | --- | --- |
-| Find the face in the frame | SCRFD-2.5GF | 3.4 MB |
-| Turn it into a faceprint | ArcFace ResNet-50, trained on WebFace600K | 43.8 MB |
+| Role | Model | Architecture | Training data | Download size |
+| --- | --- | --- | --- | --- |
+| Face detection and landmarks | SCRFD-2.5G-KPS ([Guo et al., ICLR 2022](https://arxiv.org/abs/2105.04714)) | 0.82M parameters, 2.5 GFLOPs at VGA | WIDER FACE | 3.4 MB |
+| Face recognition | ArcFace `w600k_r50` from the `buffalo_l` v0.7 model pack ([Deng et al., CVPR 2019](https://arxiv.org/abs/1801.07698)) | IResNet-50, 512-dimensional output | WebFace600K, a 600,000-identity subset of WebFace260M | 43.8 MB |
 
-The recognition model is InsightFace's [`buffalo_l`](https://github.com/deepinsight/insightface/blob/master/python-package/docs/model_zoo.md) release (`w600k_r50`, v0.7), with its weights stored in 8 bits instead of 32 to keep the download small. The calculations themselves are unchanged — see [How these figures relate to our build](#how-these-figures-relate-to-our-build).
+The recognition model is InsightFace's release with its weights stored in 8 bits instead of 32 (one scale per output channel). ONNX Runtime restores 32-bit weights when it loads the model, so the arithmetic is otherwise unchanged. The effect of this on accuracy is discussed under [Effect of the 8-bit weights](#effect-of-the-8-bit-weights).
 
 ## Published accuracy of the recognition model
 
-These are the figures InsightFace publishes for this model. They describe the model as released; they are not measurements of ZKPassport's end-to-end flow, which adds the liveness check, the multi-frame average and the fixed 0.50 threshold.
+These are the figures InsightFace publishes for the `buffalo_l` recognition model. They describe the model as released, in 32-bit precision, on public and InsightFace-internal benchmarks. They are not measurements of ZKPassport's end-to-end flow.
 
-### Standard benchmarks
+### Standard verification benchmarks
 
-| Benchmark | What it tests | Comparisons | Score |
+| Benchmark | What it tests | Comparisons | Result |
 | --- | --- | --- | --- |
-| LFW | Everyday photos — same person or not | 6,000 pairs | 99.83 % |
-| CFP-FP | One photo from the front, one from the side | 7,000 pairs | 99.33 % |
-| AgeDB-30 | The same person photographed up to 30 years apart | 6,000 pairs | 98.23 % |
-| IJB-C (E4) | Hard real-world photos and video frames | 19.6k genuine, 15.6M impostor | 97.25 % |
+| LFW | Unconstrained web photos, same person or not | 6,000 pairs | 99.83 % accuracy |
+| CFP-FP | Frontal photo against a profile photo of the same person | 7,000 pairs | 99.33 % accuracy |
+| AgeDB-30 | Photos of the same person taken up to 30 years apart | 6,000 pairs | 98.23 % accuracy |
+| IJB-C | Mixed-quality stills and video frames, verification protocol | 19,557 genuine and 15,638,932 impostor comparisons | 97.25 % TAR at FAR = 0.01 % |
 
-These counts matter when reading small differences. LFW is 6,000 pairs, so one wrong pair moves the score by about 0.017 points — a gap of a few hundredths means one or two pairs, not a real difference.
+Accuracy on the pair benchmarks is the share of pairs classified correctly at the best threshold for that benchmark. With 6,000 pairs, a single pair moves the result by about 0.017 points, so differences of a few hundredths between models are within noise. The IJB-C figure is read differently: at an operating point where 1 impostor comparison in 10,000 is wrongly accepted, 97.25 % of genuine comparisons are accepted (FNMR of 2.75 %).
 
-### A much harder test, broken down by group
+### Results by demographic group
 
-InsightFace also reports results on IFRT, its own large-scale test: 242,143 people, every image compared against every other, at a setting that accepts at most **one wrong pair in a million**. The score is the share of genuine pairs the model still recognises. It is far stricter than anything ZKPassport runs at, which is why these numbers are lower than the ones above.
+InsightFace also evaluates its models on a private multi-racial test set (the "MR" set of the InsightFace Recognition Test). Every image is compared with every other image, and the reported figure is the share of genuine pairs accepted at a threshold where no more than 1 impostor pair in 1,000,000 is accepted (TAR at FAR = 0.0001 %). This is a far stricter operating point than any single-document check, which is why the numbers are lower than the ones above.
 
-| Group | Images tested | Score |
-| --- | --- | --- |
-| All groups | 1,624,305 | 91.25 % |
-| Caucasian | 697,245 | 94.70 % |
-| South Asian | 237,080 | 93.16 % |
-| African | 298,010 | 90.29 % |
-| East Asian | 391,970 | 74.96 % |
+| Group | Identities | Images | Genuine pairs | Impostor pairs | TAR at FAR = 1e-6 |
+| --- | --- | --- | --- | --- | --- |
+| All groups | 242,143 | 1,624,305 | 4,689,037 | 2,638,360,419,683 | 91.25 % |
+| Caucasian | 103,293 | 697,245 | 2,024,609 | 486,147,868,171 | 94.70 % |
+| South Asian | 35,086 | 237,080 | 688,259 | 56,206,001,061 | 93.16 % |
+| African | 43,874 | 298,010 | 870,091 | 88,808,791,999 | 90.29 % |
+| East Asian | 59,890 | 391,970 | 1,106,078 | 153,638,982,852 | 74.96 % |
 
 :::info
-These are not ZKPassport pass rates and should not be read as such. IFRT compares every image against every other at a setting far stricter than a one-to-one check against your own passport photo, so the figures say how the model ranks under maximum pressure, not how often a user completes a FaceMatch.
+These are not pass rates for Private FaceMatch. They show how the model ranks under a one-in-a-million false accept constraint across a very large test set, not how often a user completes a scan against their own ID photo at a 0.50 threshold.
 
-What they do show is that performance is not uniform across groups, with the East Asian figure the clear outlier. The gap is real — it is measured over 391,970 images, so it is not a small-sample artefact — and we have not measured it at our own threshold. Teams with obligations around demographic performance should factor this in and offer a fallback for users who cannot complete a FaceMatch.
+What they do show is that the model's performance is not uniform across groups. The East Asian figure is a clear outlier, and because it is measured over 391,970 images and more than a million genuine pairs it is not a small-sample effect. ZKPassport has not measured how this gap translates to its own threshold and reference images. Integrators with obligations around demographic performance should take this into account and offer a fallback path for users who cannot complete a FaceMatch.
 :::
 
-### How these figures relate to our build
+### Detection model
 
-The figures above were measured on InsightFace's release, which stores its weights in 32 bits. ZKPassport ships the same model with 8-bit weights.
+SCRFD-2.5G-KPS reports an average precision of 93.80 % (easy), 92.02 % (medium) and 77.13 % (hard) on the WIDER FACE validation set at VGA resolution. Private FaceMatch operates in the easy regime: one cooperative face, close to the camera, in a portrait frame. A frame where no face is detected is simply not counted.
 
-Two peer-reviewed studies measure what 8-bit storage costs on this architecture. Both compress more aggressively than we do — they round the calculations as well as the weights — so they bound the difference rather than describe it:
+## Effect of the 8-bit weights
 
-- [QuantFace (ICPR 2022)](https://arxiv.org/abs/2206.10526) finds every benchmark within 0.31 points of full precision, and most within 0.1 — LFW 99.80 % → 99.78 %, IJB-C 95.74 % → 95.66 %.
-- [Neto et al. (BIOSIG 2023)](https://arxiv.org/abs/2308.11840) finds no measurable change for any ethnic group on RFW (6,000 pairs per group): all four within ±0.1 points, in both directions.
+The published figures above were measured on the 32-bit release. ZKPassport ships the same model with its weights rounded to 8 bits to cut the download from 175 MB to 44 MB. Activations and all arithmetic stay in 32-bit floating point.
+
+ZKPassport has not run the public benchmarks on the 8-bit file. Two peer-reviewed studies measure a more aggressive form of 8-bit quantisation on the same architecture and loss (IResNet-50 with ArcFace, trained on MS1MV2). Both quantise the activations as well as the weights and retrain the model afterwards, so they bound the effect rather than measure the exact file ZKPassport ships.
+
+[QuantFace (Boutros et al., ICPR 2022)](https://arxiv.org/abs/2206.10526), ResNet-50, 32-bit versus 8-bit weights and activations:
+
+| Benchmark | 32-bit | 8-bit | Change |
+| --- | --- | --- | --- |
+| LFW | 99.80 % | 99.78 % | −0.02 |
+| CFP-FP | 98.01 % | 97.70 % | −0.31 |
+| AgeDB-30 | 98.08 % | 98.00 % | −0.08 |
+| CALFW | 96.10 % | 96.00 % | −0.10 |
+| CPLFW | 92.43 % | 92.17 % | −0.26 |
+| IJB-C (TAR at FAR = 1e-4) | 95.74 % | 95.66 % | −0.08 |
+| IJB-B (TAR at FAR = 1e-4) | 94.19 % | 94.15 % | −0.04 |
+
+[Neto et al. (BIOSIG 2023)](https://arxiv.org/abs/2308.11840), same ResNet-50, evaluated per ethnicity on RFW (6,000 pairs per group):
+
+| Group | 32-bit | 8-bit | Change |
+| --- | --- | --- | --- |
+| Caucasian | 99.00 % | 99.07 % | +0.07 |
+| South Asian | 98.15 % | 98.07 % | −0.08 |
+| East Asian | 97.62 % | 97.65 % | +0.03 |
+| African | 98.32 % | 98.40 % | +0.08 |
+
+Both studies find the 8-bit model within a third of a point of the 32-bit model on every benchmark, and the per-group differences are within the noise of a 6,000-pair test. The quantisation they apply is stricter than ZKPassport's, so the effect on the shipped model is expected to be smaller still.
 
 ## What has not been measured
 
-Stated plainly, rather than left to be inferred:
+The following items are usually requested in accuracy questionnaires and are not available for Private FaceMatch today.
 
-- **No independent laboratory evaluation.** InsightFace models are not submitted to NIST FRTE, so no NIST figures exist for this model or for ZKPassport's build of it.
-- **No ZKPassport study on chip photos.** The published benchmarks use photos from the web. Chip photos are different: passport-style, sometimes a decade old, and stored at low resolution. We have no published figures of our own for that kind of image.
-- **No certified PAD testing**, as noted under [Liveness checks](#liveness-checks).
-- **The 8-bit evidence is indirect.** Both papers test the same architecture and loss, but a model trained on a different dataset (MS1MV2, not WebFace600K). It is strong evidence, not a measurement of the exact file we ship.
+- **FMR and FNMR of the end-to-end flow.** ZKPassport has not run a controlled study of the full scan (chip photo as reference, phone camera as probe, 0.50 threshold, multi-frame averaging). The published benchmarks use web photos, while chip photos are passport-style portraits that can be up to ten years old and are stored at low resolution.
+- **Demographic breakdown at the operating threshold.** The only demographic figures available are InsightFace's, measured at a different operating point on a different kind of image.
+- **Independent laboratory evaluation.** The models have not been submitted to NIST FRTE (formerly FRVT) and no accredited laboratory has evaluated Private FaceMatch.
+- **Presentation attack detection.** No ISO/IEC 30107-3 evaluation and no APCER/BPCER figures.
+- **Confidence intervals.** None of the published figures come with uncertainty estimates.
+- **Benchmarks on the 8-bit file.** The quantisation evidence is from studies of the same architecture trained on a different dataset.
 
-## What stays on the phone, and what you receive
+ZKPassport recommends that integrators with regulatory obligations:
 
-Camera frames, the chip photo and the faceprints stay on the phone. None of them are transmitted to ZKPassport or to you, and none of them are kept once the scan finishes.
+1. Treat the figures on this page as a description of the model, not as a guarantee of a pass rate for their user base.
+2. Run a pilot on their own population and record completion and retry rates per document type and, where lawful, per demographic group.
+3. Keep a fallback path (such as a manual review or an alternative verification method) for users who cannot complete a FaceMatch.
+4. Use `strict` mode wherever the result carries legal or financial weight.
 
-What the phone does keep, to allow the [30-day reuse](#how-the-decision-is-made) above, is the signed result itself: the mode, the score, the threshold, and hashes of the chip photo and the faceprint. It holds no image and no faceprint, and it never leaves the device.
+## Data handling
 
-Your server receives a zero-knowledge proof and `result.facematch.passed` — a single pass or fail. To make that trustworthy, the app binds the outcome to the device and to the document:
+Camera frames, the chip photo and both faceprints stay on the phone. They are processed in memory and discarded when the scan ends. None of them are sent to ZKPassport, to the integrator, or to any third party.
 
-- The scan result is signed by **Apple App Attest** or **Google Play Integrity**, so you can tell it ran on a device that passes those checks. The app refuses to produce a FaceMatch on devices these services do not vouch for — see [Limitations](./limitations#facematch-support).
-- The mode used, the final score, the threshold and a hash of the chip photo are all sealed into that signed attestation, and from there into the proof. Because the mode and the document are covered by the signature, a result cannot be re-presented as a different mode or against a different document.
+What the phone keeps, to allow the 30-day reuse, is the signed outcome: the mode, the final score, the threshold, a hash of the chip photo and a hash of the reference faceprint. It contains no image and no faceprint and never leaves the device. Removing the ID from the app deletes it.
+
+If the user has opted into diagnostic reporting in the app, a completed or cancelled scan sends ZKPassport an event with the mode, timing, the number of frames, summary statistics of the scores and head pose (mean, minimum, maximum, standard deviation), and the device model and OS version. No image, faceprint or document data is included. Users who did not opt in send nothing.
+
+## What the verifier receives
+
+Your server receives a zero-knowledge proof and, once verified, `result.facematch.passed` with the mode that was used. The proof makes that boolean trustworthy without revealing anything else:
+
+- The scan outcome is signed by a hardware-backed key through **Apple App Attest** (iOS) or **Android Key Attestation and Google Play Integrity** (Android). The proof verifies the certificate chain back to Apple's or Google's root, so the attestation can only come from a genuine, unmodified ZKPassport app on a device those services vouch for. The app refuses to run a FaceMatch on devices that cannot attest; see [Limitations](./limitations#facematch-support).
+- The signed data covers the mode, the final score, the threshold and the hash of the chip photo. The proof checks that the mode is the one you requested and that the chip photo hash is the one covered by the document signature verified in the same proof set. A result cannot be re-presented for a different mode or a different document.
+- The proof also checks that the attestation was issued for ZKPassport's app identifier in the production environment, and that the document has not expired.
+
+The proof does not re-evaluate the face comparison. The comparison happens inside the attested app, and an attestation is only produced for a scan that completed successfully.
+
+## Questionnaire summary
+
+A condensed set of answers in the order most provider questionnaires ask for them.
+
+| Item | Answer |
+| --- | --- |
+| Identification (1:N) metrics: FPIR, FNIR, gallery size | Not applicable. Private FaceMatch is a 1:1 verification with no gallery |
+| Matching score range and direction | Cosine similarity, −1 to 1, higher is more similar |
+| Match acceptance rule | Frame counts if score is strictly greater than 0.50; 10 matching frames complete the scan; their mean is recorded |
+| Default threshold | 0.50, fixed, not configurable |
+| Threshold selection method | Set by ZKPassport; not tuned per integrator |
+| Template extraction algorithms | One: ArcFace IResNet-50 (`w600k_r50`), 512-dimensional. No alternative modes |
+| Processing performance | Runs at camera frame rate on supported phones; no published latency figures |
+| Template compatibility | Not applicable. No templates are stored or exchanged |
+| Evaluation datasets | InsightFace's published benchmarks (LFW, CFP-FP, AgeDB-30, IJB-C) and its private MR set; no ZKPassport-run evaluation |
+| Evaluation sample sizes | See the tables above |
+| Demographic coverage | MR set: African, Caucasian, South Asian, East Asian; see the table above |
+| Enrollment image requirements | The ICAO 9303 portrait on the ID chip; nothing is enrolled by the user |
+| Probe image requirements | Live camera frames at 640×480; a face must be detected with score at least 0.3 |
+| Quality filtering | Frames with no detected face or a score at or below 0.50 are not counted |
+| Failed detections | Not counted; the scan continues until it completes or times out after 60 seconds |
+| Statistical uncertainty | Not available |
+| Liveness type | Active head-movement challenge in `strict` mode; multi-frame matching only in `regular` mode |
+| Liveness score range and threshold | None; challenge completion is binary |
+| Passive PAD model | None |
+| PAD evaluation (ISO/IEC 30107-3) | Not performed |
+| Independent testing | None |
+| Result reuse | 30 days per ID and per mode |
+
+## Glossary
+
+| Term | Meaning |
+| --- | --- |
+| FMR / FAR | False Match Rate / False Accept Rate: share of impostor comparisons wrongly accepted |
+| FNMR / FRR | False Non-Match Rate / False Reject Rate: share of genuine comparisons wrongly rejected |
+| TAR | True Accept Rate: 1 − FNMR |
+| FPIR / FNIR | False Positive / False Negative Identification Rate: the 1:N equivalents of FMR and FNMR, not applicable here |
+| PAD | Presentation Attack Detection: detecting photos, screens, masks and similar spoofs |
+| APCER / BPCER | Attack Presentation / Bona Fide Presentation Classification Error Rate, the ISO/IEC 30107-3 equivalents of FAR and FRR for liveness |
+| Faceprint | The 512-number vector a recognition model produces for a face; also called a template or embedding |
+
+## References
+
+- InsightFace model zoo: [python-package/docs/model_zoo.md](https://github.com/deepinsight/insightface/blob/master/python-package/docs/model_zoo.md)
+- InsightFace Recognition Test, MR set description: [challenges/iccv21-mfr](https://github.com/deepinsight/insightface/tree/master/challenges/iccv21-mfr)
+- Deng et al., *ArcFace: Additive Angular Margin Loss for Deep Face Recognition*, CVPR 2019: [arXiv:1801.07698](https://arxiv.org/abs/1801.07698)
+- Guo et al., *Sample and Computation Redistribution for Efficient Face Detection*, ICLR 2022: [arXiv:2105.04714](https://arxiv.org/abs/2105.04714)
+- Boutros et al., *QuantFace: Towards Lightweight Face Recognition by Synthetic Data Low-bit Quantization*, ICPR 2022: [arXiv:2206.10526](https://arxiv.org/abs/2206.10526)
+- Neto et al., *Compressed Models Decompress Race Biases: What Quantized Models Forget for Fair Face Recognition*, BIOSIG 2023: [arXiv:2308.11840](https://arxiv.org/abs/2308.11840)
+- ISO/IEC 19795-1 (biometric performance testing) and ISO/IEC 30107-3 (presentation attack detection testing)
