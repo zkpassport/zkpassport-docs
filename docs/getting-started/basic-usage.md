@@ -40,7 +40,7 @@ The shape is the same for every attribute:
 - **`included` / `excluded`** — country sets, on `nationality` and `issuing_country`. Both accept country names or alpha-3 codes.
 - **`disclose: true`** — reveal the value. Available on `firstname`, `lastname`, `fullname`, `gender`, `document_number`, `document_type`, `birthdate`, `expiry_date`, `nationality` and `issuing_country`.
 - **`sanctions: true`** — check the user against the available sanctions lists.
-- **`facematch: true`** (or `{ mode: "regular" }`) — verify the person generating the proof is the one on the ID.
+- **`facematch: true`** — verify the person generating the proof is the one on the ID.
 
 :::note
 Whenever the button's query discloses anything, it also discloses `document_type` — that's what makes the other disclosed values decodable. Add `.disclose("document_type")` when you recreate the query on your server, or verification fails.

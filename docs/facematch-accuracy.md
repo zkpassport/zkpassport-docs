@@ -49,7 +49,7 @@ These follow ISO/IEC 19795-1. The published figures further down use the equival
 2. The front camera streams frames at 640×480. On each frame the detector finds the largest face and its five landmarks (eyes, nose, mouth corners).
 3. The face is aligned to a 112×112 crop from those landmarks and the recognition model turns it into a faceprint: a vector of 512 numbers. The faceprint is not an image and cannot be turned back into one.
 4. The frame faceprint is compared with the reference faceprint using cosine similarity. A frame counts as a match when its score is above the threshold.
-5. The scan completes once enough frames have matched (and, in strict mode, once the head-movement challenge is done). The scores of the matching frames are averaged into the final score.
+5. The scan completes once the head-movement challenge is done and enough frames have matched. The scores of the matching frames are averaged into the final score.
 6. The phone's attestation service signs the outcome, and the app produces a zero-knowledge proof over that signature.
 
 | Parameter | Value |
@@ -62,11 +62,11 @@ These follow ISO/IEC 19795-1. The published figures further down use the equival
 | Comparison | Cosine similarity of the two faceprints |
 | Score range | −1 to 1, higher means more similar |
 | Per-frame match rule | score strictly greater than 0.50 |
-| Frames required | 10 matching frames (see liveness modes for how they are collected) |
+| Frames required | 10 matching frames: 2 facing the camera, then 2 at each of the four prompted head directions |
 | Final score | Mean of the 10 matching frames' scores, recorded in the attestation together with the threshold |
 | Timeout | 60 seconds without a matching frame ends the scan; the user can retry |
-| Decision unit | One scan session, per ID and per mode |
-| Result reuse | A completed scan is reusable for 30 days for the same ID and mode, after which a new scan is required |
+| Decision unit | One scan session, per ID |
+| Result reuse | A completed scan is reusable for 30 days for the same ID, after which a new scan is required |
 
 ### Matching threshold
 
@@ -82,16 +82,15 @@ ZKPassport has not measured FMR and FNMR at this threshold on ID chip photos. Se
 
 ## Liveness
 
-A face comparison on its own can be fooled by holding a printed photo or a screen in front of the camera. Private FaceMatch has two modes that differ in how much protection they add.
+A face comparison on its own can be fooled by holding a printed photo or a screen in front of the camera. Private FaceMatch therefore combines the comparison with an active head-movement challenge.
 
-| | `regular` | `strict` (default) |
-| --- | --- | --- |
-| What the user does | Looks at the camera | Looks at the camera, then turns their head left, up, right and down when prompted |
-| Frames collected | 10 frames that match the ID photo | 2 matching frames facing the camera, then 2 matching frames at each of the four directions |
-| Head-movement check | None | Each turned frame must have the head pose within 35° of the requested direction and turned far enough to be unambiguous, and must still match the ID photo above the threshold |
-| Protection | Requires a live camera feed of a face that matches the ID across several frames. A printed photo or a replayed video of the ID holder is not detected | A printed photo cannot follow the prompts. A replayed video has to show the right person turning in the requested order while staying above the threshold on every counted frame |
-| Speed | A few seconds | Typically 10 to 20 seconds |
-| Suited to | Low-risk flows where speed matters | KYC and any flow where the result carries weight |
+| | |
+| --- | --- |
+| What the user does | Looks at the camera, then turns their head left, up, right and down when prompted |
+| Frames collected | 2 matching frames facing the camera, then 2 matching frames at each of the four directions, 10 in total |
+| Head-movement check | Each turned frame must have the head pose within 35° of the requested direction and turned far enough to be unambiguous, and must still match the ID photo above the threshold |
+| Protection | A printed photo cannot follow the prompts. A replayed video has to show the right person turning in the requested order while staying above the threshold on every counted frame |
+| Duration | Typically 10 to 20 seconds |
 
 The head pose is estimated from the five landmarks returned by the detector, so the challenge uses no additional model.
 
@@ -199,22 +198,21 @@ ZKPassport recommends that integrators with regulatory obligations:
 1. Treat the figures on this page as a description of the model, not as a guarantee of a pass rate for their user base.
 2. Run a pilot on their own population and record completion and retry rates per document type and, where lawful, per demographic group.
 3. Keep a fallback path (such as a manual review or an alternative verification method) for users who cannot complete a FaceMatch.
-4. Use `strict` mode wherever the result carries legal or financial weight.
 
 ## Data handling
 
 Camera frames, the chip photo and both faceprints stay on the phone. They are processed in memory and discarded when the scan ends. None of them are sent to ZKPassport, to the integrator, or to any third party.
 
-What the phone keeps, to allow the 30-day reuse, is the signed outcome: the mode, the final score, the threshold, a hash of the chip photo and a hash of the reference faceprint. It contains no image and no faceprint and never leaves the device. Removing the ID from the app deletes it.
+What the phone keeps, to allow the 30-day reuse, is the signed outcome: the final score, the threshold, a hash of the chip photo and a hash of the reference faceprint. It contains no image and no faceprint and never leaves the device. Removing the ID from the app deletes it.
 
-If the user has opted into diagnostic reporting in the app, a completed or cancelled scan sends ZKPassport an event with the mode, timing, the number of frames, summary statistics of the scores and head pose (mean, minimum, maximum, standard deviation), and the device model and OS version. No image, faceprint or document data is included. Users who did not opt in send nothing.
+If the user has opted into diagnostic reporting in the app, a completed or cancelled scan sends ZKPassport an event with timing, the number of frames, summary statistics of the scores and head pose (mean, minimum, maximum, standard deviation), and the device model and OS version. No image, faceprint or document data is included. Users who did not opt in send nothing.
 
 ## What the verifier receives
 
-Your server receives a zero-knowledge proof and, once verified, `result.facematch.passed` with the mode that was used. The proof makes that boolean trustworthy without revealing anything else:
+Your server receives a zero-knowledge proof and, once verified, `result.facematch.passed`. The proof makes that boolean trustworthy without revealing anything else:
 
 - The scan outcome is signed by a hardware-backed key through **Apple App Attest** (iOS) or **Android Key Attestation and Google Play Integrity** (Android). The proof verifies the certificate chain back to Apple's or Google's root, so the attestation can only come from a genuine, unmodified ZKPassport app on a device those services vouch for. The app refuses to run a FaceMatch on devices that cannot attest; see [Limitations](./limitations#facematch-support).
-- The signed data covers the mode, the final score, the threshold and the hash of the chip photo. The proof checks that the mode is the one you requested and that the chip photo hash is the one covered by the document signature verified in the same proof set. A result cannot be re-presented for a different mode or a different document.
+- The signed data covers the final score, the threshold and the hash of the chip photo. The proof checks that the chip photo hash is the one covered by the document signature verified in the same proof set, so a result cannot be re-presented for a different document.
 - The proof also checks that the attestation was issued for ZKPassport's app identifier in the production environment, and that the document has not expired.
 
 The proof does not re-evaluate the face comparison. The comparison happens inside the attested app, and an attestation is only produced for a scan that completed successfully.
@@ -241,12 +239,12 @@ A condensed set of answers in the order most provider questionnaires ask for the
 | Quality filtering | Frames with no detected face or a score at or below 0.50 are not counted |
 | Failed detections | Not counted; the scan continues until it completes or times out after 60 seconds |
 | Statistical uncertainty | Not available |
-| Liveness type | Active head-movement challenge in `strict` mode; multi-frame matching only in `regular` mode |
+| Liveness type | Active head-movement challenge combined with per-frame matching against the ID photo |
 | Liveness score range and threshold | None; challenge completion is binary |
 | Passive PAD model | None |
 | PAD evaluation (ISO/IEC 30107-3) | Not performed |
 | Independent testing | None |
-| Result reuse | 30 days per ID and per mode |
+| Result reuse | 30 days per ID |
 
 ## Glossary
 
