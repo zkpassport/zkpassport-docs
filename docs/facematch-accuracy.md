@@ -5,7 +5,7 @@ title: Private FaceMatch Technical Note
 
 # Private FaceMatch Technical Note
 
-This page describes how Private FaceMatch works, which models it uses, how accurate those models are, and what has not been measured. It is written for integration, compliance and regulatory reviews. For how to request a FaceMatch in your integration, see the [Private FaceMatch example](./examples/facematch).
+This page describes how Private FaceMatch works, which models it uses, how accurate those models are, and where their evaluation stands. It is written for integration, compliance and regulatory reviews. For how to request a FaceMatch in your integration, see the [Private FaceMatch example](./examples/facematch).
 
 | | |
 | --- | --- |
