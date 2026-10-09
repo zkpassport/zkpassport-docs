@@ -62,7 +62,7 @@ Possible reasons include:
 The ZKPassport mobile app packages a few things directly in its binary in order to provide fully local verification. This includes:
 
 - A 128MB SRS from Aztec trusted setup to cover ZK proof generation for circuits up to the 2^21 subgroup size
-- A 180MB of ML models to perform Private FaceMatch locally on the device
+- 47MB of ML models to perform Private FaceMatch locally on the device
 - Other artifacts such as images, fonts, videos/animations, and the ZK prover binary
 
 ## Troubleshooting
