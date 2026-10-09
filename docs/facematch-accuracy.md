@@ -131,22 +131,24 @@ These are the figures InsightFace publishes for the `buffalo_l` recognition mode
 
 Accuracy on the pair benchmarks is the share of pairs classified correctly at the best threshold for that benchmark. With 6,000 pairs, a single pair moves the result by about 0.017 points, so differences of a few hundredths between models are within noise. The IJB-C figure is read differently: at an operating point where 1 impostor comparison in 10,000 is wrongly accepted, 97.25 % of genuine comparisons are accepted (FNMR of 2.75 %).
 
-### Results by demographic group
+### Results by demographic group at a one-in-a-million impersonation rate
 
-InsightFace also evaluates its models on a private multi-racial test set (the "MR" set of the InsightFace Recognition Test). Every image is compared with every other image, and the reported figure is the share of genuine pairs accepted at a threshold where no more than 1 impostor pair in 1,000,000 is accepted (TAR at FAR = 0.0001 %). This is a far stricter operating point than any single-document check, which is why the numbers are lower than the ones above.
+InsightFace also evaluates its models on a private multi-racial test set (the "MR" set of the InsightFace Recognition Test). Every image is compared with every other image. For each group, the threshold is raised until **no more than 1 impersonation attempt in 1,000,000 is accepted**, and the reported figure is the share of genuine users still recognised at that threshold (TAR at FAR = 1e-6).
 
-| Group | Identities | Images | Genuine pairs | Impostor pairs | TAR at FAR = 1e-6 |
+**The impersonation rate is the same for every group in this table.** What differs between groups is how many genuine users the model turns away at that setting. The gaps below are therefore differences in false rejections, not differences in how easy the model is to fool. The operating point is also far stricter than a one-to-one check against one's own ID photo, which is why the numbers are lower than those above.
+
+| Group | Identities | Images | Genuine pairs | Impostor pairs | Genuine users recognised |
 | --- | --- | --- | --- | --- | --- |
-| All groups | 242,143 | 1,624,305 | 4,689,037 | 2,638,360,419,683 | 91.25 % |
 | Caucasian | 103,293 | 697,245 | 2,024,609 | 486,147,868,171 | 94.70 % |
 | South Asian | 35,086 | 237,080 | 688,259 | 56,206,001,061 | 93.16 % |
 | African | 43,874 | 298,010 | 870,091 | 88,808,791,999 | 90.29 % |
 | East Asian | 59,890 | 391,970 | 1,106,078 | 153,638,982,852 | 74.96 % |
+| All groups | 242,143 | 1,624,305 | 4,689,037 | 2,638,360,419,683 | 91.25 % |
 
 :::info
-These are not pass rates for Private FaceMatch. They show how the model ranks under a one-in-a-million false accept constraint across a very large test set, not how often a user completes a scan against their own ID photo at a 0.50 threshold.
+These are not pass rates for Private FaceMatch. They show how many genuine users the model recognises when impersonation is held to one in a million across a very large test set, not how often a user completes a scan against their own ID photo at a 0.50 threshold.
 
-What they do show is that the model's performance is not uniform across groups. The East Asian figure is a clear outlier, and because it is measured over 391,970 images and more than a million genuine pairs it is not a small-sample effect. How this gap translates to the 0.50 threshold and chip-photo references has not yet been measured. Integrators with obligations around demographic performance should take this into account and offer a fallback path for users who cannot complete a FaceMatch.
+What they do show is that false rejections are not uniform across groups at a strict threshold. The East Asian figure is a clear outlier, and because it is measured over 391,970 images and more than a million genuine pairs it is not a small-sample effect. At operating points closer to a one-to-one check the gaps are much smaller: on RFW, a ResNet-50 ArcFace model of the same family recognises between 97.6 % and 99.0 % of genuine pairs across the same four groups (see [Effect of the 8-bit weights](#effect-of-the-8-bit-weights)). How the gap translates to the 0.50 threshold and chip-photo references has not yet been measured. Integrators with obligations around demographic performance should take this into account and offer a fallback path for users who cannot complete a FaceMatch.
 :::
 
 ### Detection model
@@ -236,7 +238,7 @@ A condensed set of answers in the order most provider questionnaires ask for the
 | Template compatibility | Not applicable. No templates are stored or exchanged |
 | Evaluation datasets | InsightFace's published benchmarks (LFW, CFP-FP, AgeDB-30, IJB-C) and its private MR set; no ZKPassport-run evaluation |
 | Evaluation sample sizes | See the tables above |
-| Demographic coverage | MR set: African, Caucasian, South Asian, East Asian; see the table above |
+| Demographic coverage | MR set: African, Caucasian, South Asian, East Asian, at a fixed one-in-a-million impersonation rate; see the table above |
 | Enrollment image requirements | The ICAO 9303 portrait on the ID chip; nothing is enrolled by the user |
 | Probe image requirements | Live camera frames at 640×480; a face must be detected with score at least 0.3 |
 | Quality filtering | Frames with no detected face or a score at or below 0.50 are not counted |
