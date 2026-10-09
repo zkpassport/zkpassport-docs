@@ -78,7 +78,7 @@ These follow ISO/IEC 19795-1. The published figures further down use the equival
 | How it was chosen | Fixed by ZKPassport on the conservative side of the range commonly used with ArcFace models. Raising it makes it harder for a different person to pass and easier for the right person to be rejected; lowering it does the opposite |
 | Failure behaviour | A poor capture (bad lighting, glare, face too far away, strong head tilt) produces frames that do not match. They are not counted and the scan keeps going until it times out. The user is told to retry |
 
-ZKPassport has not measured FMR and FNMR at this threshold on ID chip photos. See [What has not been measured](#what-has-not-been-measured).
+FMR and FNMR at this threshold on ID chip photos have not yet been measured. See [Evaluation status](#evaluation-status).
 
 ## Liveness
 
@@ -101,7 +101,7 @@ The head pose is estimated from the five landmarks returned by the detector, so 
 | Liveness score and threshold | None. The challenge is either completed within the session or the scan times out |
 | Inconclusive results | A scan that times out produces no result. Nothing is recorded or attested |
 | Decision unit | Per scan session |
-| ISO/IEC 30107-3 evaluation | Not performed. No accredited laboratory has tested Private FaceMatch for presentation attack detection, and no APCER/BPCER figures exist |
+| ISO/IEC 30107-3 evaluation | Not yet performed, so no APCER/BPCER figures are available |
 
 If your compliance process requires a certified PAD level, treat this as an open item and [get in touch](https://zkpassport.id).
 
@@ -146,7 +146,7 @@ InsightFace also evaluates its models on a private multi-racial test set (the "M
 :::info
 These are not pass rates for Private FaceMatch. They show how the model ranks under a one-in-a-million false accept constraint across a very large test set, not how often a user completes a scan against their own ID photo at a 0.50 threshold.
 
-What they do show is that the model's performance is not uniform across groups. The East Asian figure is a clear outlier, and because it is measured over 391,970 images and more than a million genuine pairs it is not a small-sample effect. ZKPassport has not measured how this gap translates to its own threshold and reference images. Integrators with obligations around demographic performance should take this into account and offer a fallback path for users who cannot complete a FaceMatch.
+What they do show is that the model's performance is not uniform across groups. The East Asian figure is a clear outlier, and because it is measured over 391,970 images and more than a million genuine pairs it is not a small-sample effect. How this gap translates to the 0.50 threshold and chip-photo references has not yet been measured. Integrators with obligations around demographic performance should take this into account and offer a fallback path for users who cannot complete a FaceMatch.
 :::
 
 ### Detection model
@@ -157,7 +157,7 @@ SCRFD-2.5G-KPS reports an average precision of 93.80 % (easy), 92.02 % (medium) 
 
 The published figures above were measured on the 32-bit release. ZKPassport ships the same model with its weights rounded to 8 bits to cut the download from 175 MB to 44 MB. Activations and all arithmetic stay in 32-bit floating point.
 
-ZKPassport has not run the public benchmarks on the 8-bit file. Two peer-reviewed studies measure a more aggressive form of 8-bit quantisation on the same architecture and loss (IResNet-50 with ArcFace, trained on MS1MV2). Both quantise the activations as well as the weights and retrain the model afterwards, so they bound the effect rather than measure the exact file ZKPassport ships.
+The public benchmarks have not been rerun on the 8-bit file. Two peer-reviewed studies measure a more aggressive form of 8-bit quantisation on the same architecture and loss (IResNet-50 with ArcFace, trained on MS1MV2). Both quantise the activations as well as the weights and retrain the model afterwards, so they bound the effect rather than measure the exact file ZKPassport ships.
 
 [QuantFace (Boutros et al., ICPR 2022)](https://arxiv.org/abs/2206.10526), ResNet-50, 32-bit versus 8-bit weights and activations:
 
@@ -182,22 +182,25 @@ ZKPassport has not run the public benchmarks on the 8-bit file. Two peer-reviewe
 
 Both studies find the 8-bit model within a third of a point of the 32-bit model on every benchmark, and the per-group differences are within the noise of a 6,000-pair test. The quantisation they apply is stricter than ZKPassport's, so the effect on the shipped model is expected to be smaller still.
 
-## What has not been measured
+## Evaluation status
 
-The following items are usually requested in accuracy questionnaires and are not available for Private FaceMatch today.
+The figures on this page establish three things: the recognition model is a published, widely used one with results on the standard public benchmarks; it has been tested at scale across four demographic groups on a test set of 1.6 million images; and the effect of storing its weights in 8 bits is bounded by two peer-reviewed studies of the same architecture. What they do not yet include is an evaluation of Private FaceMatch as a whole, with ID chip photos as reference and a phone camera as probe, at the 0.50 threshold the app uses.
 
-- **FMR and FNMR of the end-to-end flow.** ZKPassport has not run a controlled study of the full scan (chip photo as reference, phone camera as probe, 0.50 threshold, multi-frame averaging). The published benchmarks use web photos, while chip photos are passport-style portraits that can be up to ten years old and are stored at low resolution.
-- **Demographic breakdown at the operating threshold.** The only demographic figures available are InsightFace's, measured at a different operating point on a different kind of image.
-- **Independent laboratory evaluation.** The models have not been submitted to NIST FRTE (formerly FRVT) and no accredited laboratory has evaluated Private FaceMatch.
-- **Presentation attack detection.** No ISO/IEC 30107-3 evaluation and no APCER/BPCER figures.
-- **Confidence intervals.** None of the published figures come with uncertainty estimates.
-- **Benchmarks on the 8-bit file.** The quantisation evidence is from studies of the same architecture trained on a different dataset.
+Items that questionnaires commonly ask for and their current status:
 
-ZKPassport recommends that integrators with regulatory obligations:
+| Item | Status |
+| --- | --- |
+| FMR and FNMR of the end-to-end flow | Not yet measured. Chip photos differ from the web photos used in the public benchmarks: they are passport-style portraits, can be up to ten years old and are stored at low resolution. An internal evaluation on chip photos is the next step |
+| Demographic breakdown at the operating threshold | Available from InsightFace at a stricter operating point (see above); not yet measured at 0.50 |
+| Independent laboratory evaluation | Not yet performed. The models have not been submitted to NIST FRTE and Private FaceMatch has not been evaluated by an accredited laboratory |
+| Presentation attack detection (ISO/IEC 30107-3) | Not yet performed; no APCER/BPCER figures |
+| Benchmarks on the 8-bit file | Bounded by the two studies above rather than measured directly |
 
-1. Treat the figures on this page as a description of the model, not as a guarantee of a pass rate for their user base.
+Until those evaluations are in place, integrators with regulatory obligations should:
+
+1. Read the figures on this page as a description of the model rather than a guaranteed pass rate for their own user base.
 2. Run a pilot on their own population and record completion and retry rates per document type and, where lawful, per demographic group.
-3. Keep a fallback path (such as a manual review or an alternative verification method) for users who cannot complete a FaceMatch.
+3. Keep a fallback path, such as manual review or an alternative verification method, for users who cannot complete a FaceMatch.
 
 ## Data handling
 
@@ -238,12 +241,12 @@ A condensed set of answers in the order most provider questionnaires ask for the
 | Probe image requirements | Live camera frames at 640×480; a face must be detected with score at least 0.3 |
 | Quality filtering | Frames with no detected face or a score at or below 0.50 are not counted |
 | Failed detections | Not counted; the scan continues until it completes or times out after 60 seconds |
-| Statistical uncertainty | Not available |
+| Statistical uncertainty | Not published for the benchmarks above |
 | Liveness type | Active head-movement challenge combined with per-frame matching against the ID photo |
 | Liveness score range and threshold | None; challenge completion is binary |
 | Passive PAD model | None |
-| PAD evaluation (ISO/IEC 30107-3) | Not performed |
-| Independent testing | None |
+| PAD evaluation (ISO/IEC 30107-3) | Not yet performed |
+| Independent testing | Not yet performed |
 | Result reuse | 30 days per ID |
 
 ## Glossary
