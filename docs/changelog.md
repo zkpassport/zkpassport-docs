@@ -19,7 +19,7 @@ The vanilla entry of the **Verify with ZKPassport** button is now a single objec
 
 ### New Features
 
-- The button is available from a CDN for pages without a bundler: `<script src="https://cdn.zkpassport.id/ui/v0/ui.js">` defines `VerifyWithZKPassport` as a global. See the [Quick Start](./getting-started/quick-start).
+- The button is available from a CDN for pages without a bundler: `<script src="https://cdn.zkpassport.id/ui/v1/ui.js">` defines `VerifyWithZKPassport` as a global. See the [Quick Start](./getting-started/quick-start).
 
 ## v0.18.x
 

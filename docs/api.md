@@ -945,13 +945,13 @@ type VerifyButtonHandle = {
 The same `VerifyWithZKPassport` object is available as a global from ZKPassport's CDN, for pages without a bundler:
 
 ```html
-<script src="https://cdn.zkpassport.id/ui/v0/ui.js"></script>
+<script src="https://cdn.zkpassport.id/ui/v1/ui.js"></script>
 <script>
   VerifyWithZKPassport.render("#zkpassport", { /* options */ });
 </script>
 ```
 
-`v0` follows the latest 0.x release, and a breaking change moves to `v1`. `https://cdn.zkpassport.id/ui/<version>/ui.js` pins a release.
+`v1` follows the latest release of the current API, 0.x included, and a breaking change moves to `v2`. `https://cdn.zkpassport.id/ui/<version>/ui.js` pins a release.
 
 ### Options
 
