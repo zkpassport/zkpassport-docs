@@ -89,7 +89,7 @@ Without a bundler, load the button from ZKPassport's CDN. Put both scripts at th
 ```html
 <div id="zkpassport"></div>
 
-<script src="https://cdn.zkpassport.id/ui/v1/ui.js"></script>
+<script src="https://cdn.zkpassport.id/ui/v1.js"></script>
 <script>
   VerifyWithZKPassport.render("#zkpassport", {
     purpose: "Prove you are 18+ years old",
@@ -109,7 +109,7 @@ Without a bundler, load the button from ZKPassport's CDN. Put both scripts at th
 </script>
 ```
 
-`v1` follows the latest release of the current API, 0.x included; a breaking change moves to `v2`. To pin a release instead, use `https://cdn.zkpassport.id/ui/<version>/ui.js`. You still install `@zkpassport/sdk` on your server to verify the proofs.
+`v1` follows the latest release of the current API, 0.x included; a breaking change moves to `v2`. To pin a release instead, use `https://cdn.zkpassport.id/ui/<version>.js`. You still install `@zkpassport/sdk` on your server to verify the proofs.
 
 </TabItem>
 </Tabs>
