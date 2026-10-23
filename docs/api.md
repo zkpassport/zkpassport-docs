@@ -925,18 +925,33 @@ function VerifyWithZKPassport(
 
 In the Next.js App Router, the React entry is marked `"use client"`, so import it from a client component.
 
-### Vanilla — `mountVerifyButton`
+### Vanilla — `VerifyWithZKPassport.render`
 
 ```typescript
-import { mountVerifyButton } from "@zkpassport/ui/button";
+import { VerifyWithZKPassport } from "@zkpassport/ui/button";
 
-function mountVerifyButton(element: HTMLElement, options: VerifyWithZKPassportOptions): VerifyButtonHandle
+VerifyWithZKPassport.render(target: HTMLElement | string, options: VerifyWithZKPassportOptions): VerifyButtonHandle
 
 type VerifyButtonHandle = {
   update(next: VerifyWithZKPassportOptions): void; // swap options
   unmount(): void; // remove the button
 };
 ```
+
+`target` is the element to render into, or a selector for it.
+
+### Script tag
+
+The same `VerifyWithZKPassport` object is available as a global from ZKPassport's CDN, for pages without a bundler:
+
+```html
+<script src="https://cdn.zkpassport.id/ui/v1.js"></script>
+<script>
+  VerifyWithZKPassport.render("#zkpassport", { /* options */ });
+</script>
+```
+
+`v1` follows the latest release of the current API, 0.x included, and a breaking change moves to `v2`. `https://cdn.zkpassport.id/ui/<version>.js` pins a release.
 
 ### Options
 

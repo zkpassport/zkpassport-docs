@@ -8,7 +8,20 @@ sidebar_position: 6
 
 This page documents all notable changes to ZKPassport SDK, particularly highlighting any breaking changes that developers should be aware of when upgrading.
 
-## v0.18.x - Latest release
+## v0.19.x - Latest release
+
+### Breaking Changes
+
+The vanilla entry of the **Verify with ZKPassport** button is now a single object, `VerifyWithZKPassport`, with a `render()` method. React is unchanged.
+
+- `mountVerifyButton(element, options)` is replaced by `VerifyWithZKPassport.render(target, options)`, where `target` is an element or a selector. The options and the returned handle are the same.
+- `createVerification` and the headless popup helpers are no longer exported from `@zkpassport/ui`.
+
+### New Features
+
+- The button is available from a CDN for pages without a bundler: `<script src="https://cdn.zkpassport.id/ui/v1.js">` defines `VerifyWithZKPassport` as a global. See the [Quick Start](./getting-started/quick-start).
+
+## v0.18.x
 
 ### Breaking Changes
 

@@ -45,9 +45,9 @@ export default function VerifyPage() {
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mountVerifyButton } from "@zkpassport/ui/button";
+import { VerifyWithZKPassport } from "@zkpassport/ui/button";
 
-mountVerifyButton(document.getElementById("zkpassport"), {
+VerifyWithZKPassport.render("#zkpassport", {
   policyId: "pol_xyz",
   onSuccess: ({ proofs, result }) => {
     // Send the proofs and the result to your server and verify them there

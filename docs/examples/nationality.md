@@ -44,10 +44,10 @@ import { EU_COUNTRIES } from "@zkpassport/sdk";
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mountVerifyButton } from "@zkpassport/ui/button";
+import { VerifyWithZKPassport } from "@zkpassport/ui/button";
 import { EU_COUNTRIES } from "@zkpassport/sdk";
 
-mountVerifyButton(document.getElementById("zkpassport"), {
+VerifyWithZKPassport.render("#zkpassport", {
   purpose: "Prove you are a citizen of the European Union",
   service: { scope: "eu-citizen" },
   query: { nationality: { included: EU_COUNTRIES } },

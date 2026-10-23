@@ -92,9 +92,9 @@ export default RegistrationForm;
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mountVerifyButton } from "@zkpassport/ui/button";
+import { VerifyWithZKPassport } from "@zkpassport/ui/button";
 
-mountVerifyButton(document.getElementById("zkpassport"), {
+VerifyWithZKPassport.render("#zkpassport", {
   purpose: "Account verification for registration",
   service: { scope: "registration" },
   query: { age: { min: 18 }, nationality: { disclose: true } },

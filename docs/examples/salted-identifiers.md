@@ -48,9 +48,9 @@ import { VerifyWithZKPassport } from "@zkpassport/ui/react-button";
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mountVerifyButton } from "@zkpassport/ui/button";
+import { VerifyWithZKPassport } from "@zkpassport/ui/button";
 
-mountVerifyButton(document.getElementById("zkpassport"), {
+VerifyWithZKPassport.render("#zkpassport", {
   purpose: "Prove your personhood",
   service: { scope: "personhood", uniqueIdentifierType: "salted" },
   query: { facematch: true },
