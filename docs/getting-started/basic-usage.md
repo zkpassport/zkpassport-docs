@@ -103,10 +103,10 @@ export default function VerifyPage() {
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mountVerifyButton } from "@zkpassport/ui/button";
+import { VerifyWithZKPassport } from "@zkpassport/ui/button";
 import { EU_COUNTRIES } from "@zkpassport/sdk";
 
-const handle = mountVerifyButton(document.getElementById("zkpassport"), {
+const handle = VerifyWithZKPassport.render("#zkpassport", {
   purpose: "Prove you are an adult from the EU but not from Scandinavia",
   service: { scope: "eu-adult-not-scandinavia" },
   query: {

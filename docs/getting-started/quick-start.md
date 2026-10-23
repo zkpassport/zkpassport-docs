@@ -56,10 +56,10 @@ In the Next.js App Router, the React entry is marked `"use client"`, so import i
 <TabItem value="vanilla" label="Vanilla JS">
 
 ```ts
-import { mountVerifyButton } from "@zkpassport/ui/button";
+import { VerifyWithZKPassport } from "@zkpassport/ui/button";
 
 // Renders into an existing element, e.g. <div id="zkpassport"></div>
-const handle = mountVerifyButton(document.getElementById("zkpassport"), {
+const handle = VerifyWithZKPassport.render("#zkpassport", {
   purpose: "Prove you are 18+ years old",
   service: { scope: "adult" },
   query: { age: { min: 18 } },
@@ -79,7 +79,37 @@ const handle = mountVerifyButton(document.getElementById("zkpassport"), {
 // handle.unmount()           — remove the button
 ```
 
-The vanilla `mountVerifyButton()` works the same in plain JS, Vue, Svelte, Solid, Astro, or any bundler-based stack.
+`VerifyWithZKPassport.render()` takes an element or a selector and works the same in plain JS, Vue, Svelte, Solid, Astro, or any bundler-based stack.
+
+</TabItem>
+<TabItem value="html" label="Script tag">
+
+Without a bundler, load the button from ZKPassport's CDN. Put both scripts at the end of `<body>`, loader first, so the element exists and the global is defined when `render` runs:
+
+```html
+<div id="zkpassport"></div>
+
+<script src="https://cdn.zkpassport.id/ui/v0/ui.js"></script>
+<script>
+  VerifyWithZKPassport.render("#zkpassport", {
+    purpose: "Prove you are 18+ years old",
+    service: { scope: "adult" },
+    query: { age: { min: 18 } },
+    onSuccess: async ({ proofs, result }) => {
+      const response = await fetch("/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ proofs, result }),
+      });
+      const { verified } = await response.json();
+      // Returning false shows the button's error state instead of success
+      return verified;
+    },
+  });
+</script>
+```
+
+`v0` follows the latest 0.x release; a breaking change moves to `v1`. To pin a release instead, use `https://cdn.zkpassport.id/ui/<version>/ui.js`. You still install `@zkpassport/sdk` on your server to verify the proofs.
 
 </TabItem>
 </Tabs>
