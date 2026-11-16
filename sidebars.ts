@@ -26,7 +26,6 @@ const sidebars: SidebarsConfig = {
         "getting-started/onchain",
       ],
     },
-    "onchain-credentials",
     {
       type: "category",
       label: "Examples",
