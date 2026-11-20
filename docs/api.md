@@ -391,7 +391,7 @@ Requires that the ID holder is not part of any of the specified sanction lists. 
 
 - `countries` (optional): The country or list of countries whose sanction lists to check against. Defaults to `"all"`.
 - `lists` (optional): The specific lists to check against. Defaults to `"all"`.
-- `options.strict` (optional): When `true`, the check is done against the last name and first name only, which has a higher false-positive rate but is harder to evade. When `false` (default), matches need to include the date of birth and name, or the passport number and nationality.
+- `options.strict` (optional): When `true` (default), the check is done against the last name and first name only, which has a higher false-positive rate but is harder to evade. When `false`, matches need to include the date of birth and name, or the passport number and nationality.
 
 :::note
 As of today, checks run against all of the available lists (US, UK, EU, Switzerland), so `countries` and `lists` accept `"all"`. Support for specific lists is planned.
