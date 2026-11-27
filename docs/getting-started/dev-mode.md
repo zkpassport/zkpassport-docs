@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 If you don't have a valid passport or national ID to test ZKPassport with, you can enable the dev mode in the mobile app and the SDK to generate and verify proofs with mock passports.
 
-Mock passports are signed by the Zero Knowledge Republic (ZKR), a mock issuer we use to issue mock passports for the dev mode. The root certificates (CSCs) of the ZKR are included in our certificate registry on Ethereum Sepolia. However, they won't be included in mainnet versions of our registry. All mock passport proofs have 1 as unique identifier.
+Mock passports are signed by the Zero Knowledge Republic (ZKR), a mock issuer we use to issue mock passports for the dev mode. The root certificates (CSCs) of the ZKR are included in our certificate registry on Ethereum Sepolia. However, they won't be included in mainnet versions of our registry. All mock passport proofs have 1 as unique identifier value, and their unique identifier type is `NullifierType.NON_SALTED_MOCK`.
 
 ## Enable Dev Mode in the Mobile App
 
@@ -87,3 +87,11 @@ const queryBuilder = await zkPassport.request({
 
 </TabItem>
 </Tabs>
+
+## What Dev Mode Can't Test
+
+- **Verify against Sepolia.** In dev mode, `verify()` checks mock passports against the certificate registry on Ethereum Sepolia. If you pass your own RPC provider in `config.rpcUrl`, it must be a Sepolia RPC: with a mainnet one, every mock proof is refused with "The ID was signed by an unrecognized root certificate".
+- **No FaceMatch.** FaceMatch compares the person holding the phone with the mock passport's photo, so it can't pass with a mock ID. Leave `.facematch()` out of dev mode requests, and don't use a policy that asks for one.
+- **No salted identifier.** A salted unique identifier requires `.facematch("strict")`, so dev mode requests use a non-salted identifier. Expect `NullifierType.NON_SALTED_MOCK` from `verify()`.
+
+So a dev mode request checks your integration (the query, binding, scope, `verify()` and its configuration), but not FaceMatch or a salted identifier. Test those with a real ID.
