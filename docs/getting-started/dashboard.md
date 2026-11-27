@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # Dashboard Screens
 
-This page walks through each screen of the [ZKPassport Dashboard](https://dashboard.zkpassport.id) and what its options do. For how to use a policy from your code, see [Dashboard & Policies](./policies).
+This page walks through each screen of the [ZKPassport Dashboard](https://dashboard.zkpassport.id) and what its options do. For how to use a policy from your code, see [Dashboard & Policies](./policies.md).
 
 Every screen shares the same header:
 
@@ -53,8 +53,8 @@ The left side of the editor defines the policy. The right side lets you try it a
 | **Minimum Age** | The user must be at least this old | The age, 18 by default |
 | **Nationality** | Limits which nationalities are accepted | **Only these** or **All except**, then **Select countries** |
 | **Issuing Country** | Limits which countries can have issued the document | **Only these** or **All except**, then **Select countries** |
-| **Sanctions Check** | The user must not be on a sanctions list. See [`sanctions`](../api#sanctions) | None |
-| **FaceMatch** | The user's face must match their ID photo, with a strict liveness check. See [Private FaceMatch](../examples/facematch) | None |
+| **Sanctions Check** | The user must not be on a sanctions list. See [`sanctions`](../api.md#sanctions) | None |
+| **FaceMatch** | The user's face must match their ID photo, with a strict liveness check. See [Private FaceMatch](../examples/facematch.md) | None |
 
 **Reveal** lists the fields the user discloses to you when they pass. Tick only the ones you need: **Full Name**, **First Name**, **Last Name**, **Date of Birth**, **Gender**, **Nationality**, **Issuing Country**, **Document Type**, **Document Number** and **Expiry Date**.
 
@@ -62,13 +62,13 @@ The left side of the editor defines the policy. The right side lets you try it a
 | --- | --- |
 | **Proof storage: Store proofs** | Keeps each proof for as long as the policy exists |
 | **Button: Filled** or **Outline** | The style of the verify button the policy shows |
-| **Create policy** | Saves the policy. Its query is then fixed (see [What a policy locks](./policies#what-a-policy-locks)) |
+| **Create policy** | Saves the policy. Its query is then fixed (see [What a policy locks](./policies.md#what-a-policy-locks)) |
 
 The tabs on the right:
 
 - **Try it** opens the same ZKPassport window your users see. Scan it with the ZKPassport app to run the checks against your own ID. Test runs are never recorded. At least one check must be ticked.
-- **Server verification** shows the frontend code (**React** or **Vanilla JS**) and the server code (**Express** or **Node.js**) for this policy, with the checks you ticked already filled in. Verify the proofs on your server, as the [Quick Start](./quick-start#verify-the-proofs-on-your-server) explains.
-- **On-chain verification** shows the frontend code and a Solidity contract that verifies this policy's proofs on chain. See [On-chain verification](./onchain).
+- **Server verification** shows the frontend code (**React** or **Vanilla JS**) and the server code (**Express** or **Node.js**) for this policy, with the checks you ticked already filled in. Verify the proofs on your server, as the [Quick Start](./quick-start.md#verify-the-proofs-on-your-server) explains.
+- **On-chain verification** shows the frontend code and a Solidity contract that verifies this policy's proofs on chain. See [On-chain verification](./onchain.md).
 
 The **Server verification** and **On-chain verification** tabs also have an **Each person can verify only once** switch. When it is on, repeat attempts with the same ID document are rejected. The copy icon copies the code shown.
 
