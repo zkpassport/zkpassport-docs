@@ -821,6 +821,9 @@ interface QueryResultErrors {
       | "data_check_integrity"
       | "disclose"
       | "bind"
+      | "outer"
+      | "facematch"
+      | "sanctions"
   ]: {
     disclose?: QueryResultError<string | number | Date>;
     gte?: QueryResultError<number | Date>;
@@ -833,6 +836,9 @@ interface QueryResultErrors {
     commitment?: QueryResultError<string>;
     date?: QueryResultError<string>;
     certificate?: QueryResultError<string>;
+    circuit?: QueryResultError<string>;
+    scope?: QueryResultError<string>;
+    revocation?: QueryResultError<string>;
   };
 }
 
@@ -849,6 +855,27 @@ The `QueryResultErrors` type provides detailed error information when verificati
 - Specific error messages for different types of verification checks
 - Expected vs received values for debugging
 - Error messages for signature checks and data integrity
+- `outer`: errors from a compressed (outer) proof, such as its certificate, circuit, scope or date
+- `facematch` and `sanctions`: errors from the FaceMatch and sanctions checks
+
+#### Common verification errors
+
+Some `message`s point to a setup problem rather than a bad proof:
+
+| Message | Usual cause |
+| --- | --- |
+| "The ID was signed by an unrecognized root certificate" (`certificate`, under `sig_check_dsc` or `outer`) | The ID's root certificate isn't in the registry `verify()` read. For a mock ID: `devMode` isn't `true`, or `verify()` read mainnet instead of Sepolia (see [Dev Mode](./getting-started/dev-mode#verifying-locally-needs-a-sepolia-rpc)) |
+| "The proof uses an unrecognized circuit" (`outer.circuit`) | The proof's circuit isn't in the registry `verify()` read. Check that the SDK is up to date and that the registry's network is the one the proof was made for |
+| "Invalid facematch environment, it should be production" (`facematch`) | The FaceMatch was made by a non-production build of the app |
+| "The proof comes from a different domain than the one expected" | `verify()` ran with a different domain from the request's: pass the same domain to the `ZKPassport` constructor on your server |
+| "The date used to check the validity of the ID is older than the validity period" | The proof is older than `validity` allows: ask for a new one, or raise `validity` |
+
+Two checks return `verified: false` with **no** `queryResultErrors`, and only write a warning with `console.warn`:
+
+- "Unique identifier type mismatch: requested …, got …": the `uniqueIdentifierType` passed to `verify()` differs from the proof's. A mock proof's type matches its non-mock counterpart, so `NON_SALTED_MOCK` passes for `NON_SALTED`.
+- "The verification method … is not one the service accepts": the ID's verification method isn't in `allowedVerificationMethods`.
+
+If your server silences or redirects `console`, check for these two when `verified` is `false` and `queryResultErrors` is empty.
 
 ## Constants
 
@@ -1045,8 +1072,12 @@ class ZKPassportError extends Error {
   kind: ZKPassportErrorKind;
   // True when the user simply did not finish ("rejected" or "closed")
   cancelled: boolean;
+  // A more specific reason, when the app gives one
+  code?: "unsupported-id" | "id-not-accepted" | "device-unsupported" | "requirements-not-met";
 }
 ```
+
+`code` is set for some failures, as a finer reason than `kind`. It's optional: handle a missing or unknown `code` by its `kind`.
 
 :::note
 The button's styles are injected as a `<style>` tag. To restyle it, set the `--zkp-btn-*` CSS custom properties (for example `--zkp-btn-bg`, `--zkp-btn-fg`, `--zkp-btn-radius` or `--zkp-btn-font-size`) on the mount element or any ancestor, or pass a function as `children` to render your own trigger.

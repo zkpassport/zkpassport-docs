@@ -13,6 +13,10 @@ The scan includes a liveness check to prevent spoofing (e.g. using someone else'
 
 For how the comparison works, the models behind it and their published accuracy, see the [Private FaceMatch Technical Note](../facematch-accuracy).
 
+:::note
+FaceMatch can't pass with a mock ID in [dev mode](../getting-started/dev-mode#facematch-cant-pass-with-a-mock-id): a mock ID's photo isn't the tester's face, so the scan times out. Try FaceMatch with a real ID, outside dev mode.
+:::
+
 This example uses the [`@zkpassport/ui`](../getting-started/quick-start) verify button and verifies the proofs on your server.
 
 <Tabs groupId="framework">
