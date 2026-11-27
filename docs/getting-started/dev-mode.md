@@ -92,6 +92,12 @@ const queryBuilder = await zkPassport.request({
 
 Dev mode is for trying the flow with mock IDs. Some features can't be tried with them, so plan your dev-mode request around these.
 
+### Run your site on `localhost`, not a `.localhost` subdomain
+
+ZKPassport's verification window trusts a page served from `localhost` or `127.0.0.1` with any domain. So locally you can name your production domain, and its dashboard policy, as you would in production. For example, serve at `http://localhost:3000`.
+
+A name under `.localhost`, such as `http://myapp.localhost:3000`, doesn't work. Browsers send it to your machine, but to ZKPassport it's a different site from `localhost`, and its origin can't be verified as one of your allowed origins. Use plain `localhost` or `127.0.0.1` instead.
+
 ### What works
 
 A request with `devMode: true`, a non-salted unique identifier, and **no FaceMatch** works end to end with a mock ID from the iOS app. For example, with a query that only asks for `age` 18 or over:
