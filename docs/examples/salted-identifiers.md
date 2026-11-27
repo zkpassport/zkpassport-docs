@@ -86,5 +86,5 @@ if (verified) console.log("Unique identifier", uniqueIdentifier);
 ```
 
 :::info
-`verify()` also returns the identifier's type as `uniqueIdentifierType`. In [dev mode](../getting-started/dev-mode), mock proofs return `NullifierType.SALTED_MOCK` instead of `NullifierType.SALTED`, so you can tell real salted identifiers apart from test ones.
+`verify()` also returns the identifier's type as `uniqueIdentifierType`. In [dev mode](../getting-started/dev-mode), mock proofs return `NullifierType.SALTED_MOCK` instead of `NullifierType.SALTED`, so you can tell real salted identifiers apart from test ones. Note that a salted identifier needs FaceMatch, which [can't pass with a mock ID](../getting-started/dev-mode#salted-identifiers-and-policies-with-facematch-cant-be-tried-with-mock-ids). So try salted identifiers with a real ID, and use a non-salted identifier in dev mode.
 :::
